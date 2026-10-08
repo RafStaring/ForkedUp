@@ -1,0 +1,2707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Forked Up</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: white;
+    color: #222;
+    text-align: center;
+    user-select: none;
+}
+
+h1 {
+    margin: 0 0 5px;
+    font-size: 28px;
+}
+
+.subtitle {
+    margin-bottom: 18px;
+    color: #666;
+    font-size: 15px;
+}
+
+
+/* =========================
+   COLORS
+========================= */
+
+.colors {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.color-button {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.color-button.selected {
+    border-color: #222;
+    box-shadow:
+        0 0 0 2px white,
+        0 0 0 4px #222;
+}
+
+.green {
+    background: #cfe6d0;
+}
+
+.blue {
+    background: #cbdcf2;
+}
+
+.yellow {
+    background: #f5e9ad;
+}
+
+.orange {
+    background: #f5d1b0;
+}
+
+
+/* =========================
+   TOOLS
+========================= */
+
+.tools {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    margin-bottom: 18px;
+}
+
+.tool-button {
+    width: 44px;
+    height: 38px;
+    border: 1px solid #ccc;
+    background: white;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tool-button.selected {
+    border-color: #222;
+    background: #f1f1f1;
+
+    box-shadow:
+        inset 0 0 0 2px #222;
+}
+
+
+/* =========================
+   BOARD
+========================= */
+
+.board-wrapper {
+    position: relative;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.board {
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            4,
+            clamp(
+                64px,
+                18vw,
+                112px
+            )
+        );
+
+    grid-template-rows:
+        repeat(
+            4,
+            clamp(
+                64px,
+                18vw,
+                112px
+            )
+        );
+
+    gap: 4px;
+}
+
+
+/* =========================
+   CELLS
+========================= */
+
+.cell {
+    position: relative;
+    z-index: 1;
+
+    background: #fafafa;
+
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    overflow: visible;
+}
+
+.cell:hover {
+    border-color: #aaa;
+}
+
+
+/* =========================
+   CHESS PIECES
+========================= */
+
+.piece {
+    width: 62%;
+    height: 62%;
+
+    object-fit: contain;
+
+    pointer-events: none;
+
+    position: relative;
+    z-index: 2;
+}
+
+
+/* =========================
+   MARKERS
+========================= */
+
+.markers {
+    position: absolute;
+
+    top: 5px;
+    left: 5px;
+
+    display: flex;
+    gap: 3px;
+
+    pointer-events: none;
+
+    z-index: 5;
+}
+
+.marker {
+    width: 13px;
+    height: 13px;
+
+    border-radius: 50%;
+
+    border: 2px solid currentColor;
+}
+
+.marker.filled {
+    background: currentColor;
+}
+
+
+/* =========================
+   CROSS
+========================= */
+
+.marker.cross {
+    width: 16px;
+    height: 16px;
+
+    border: none;
+    border-radius: 0;
+
+    position: relative;
+}
+
+.marker.cross::before,
+.marker.cross::after {
+    content: "";
+
+    position: absolute;
+
+    left: 7px;
+    top: 0;
+
+    width: 3px;
+    height: 18px;
+
+    background: currentColor;
+
+    border-radius: 2px;
+}
+
+.marker.cross::before {
+    transform: rotate(45deg);
+}
+
+.marker.cross::after {
+    transform: rotate(-45deg);
+}
+
+
+/* =========================
+   SPECIAL SLASH
+========================= */
+
+.corner-slash {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 20px;
+    height: 3px;
+    background: #222;
+    transform: rotate(-45deg);
+    transform-origin: center;
+    pointer-events: none;
+    z-index: 50;
+    display: block;
+    border-radius: 2px;
+}
+
+.corner-slash.white-slash {
+    background: #aaa;
+}
+
+
+/* =========================
+   ARROWS
+========================= */
+
+.arrow-layer {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+
+    overflow: visible;
+
+    z-index: 20;
+}
+
+.arrow {
+    fill: none;
+
+    stroke-width: 3;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* =========================
+   BOTTOM BUTTONS
+========================= */
+
+.bottom-buttons {
+    display: flex;
+    justify-content: center;
+
+    gap: 8px;
+
+    margin-top: 18px;
+
+    flex-wrap: wrap;
+}
+
+.bottom-button {
+    padding: 8px 15px;
+
+    border: 1px solid #ccc;
+
+    background: white;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+}
+
+.bottom-button:hover {
+    background: #f3f3f3;
+}
+
+
+/* =========================
+   SUBMIT
+========================= */
+
+.submit-button {
+    padding: 8px 18px;
+    border: 1px solid #ccc;
+    background: #222;
+    color: white;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.submit-button:hover {
+    background: #444;
+}
+
+.submit-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.result-message {
+    min-height: 20px;
+    margin-top: 12px;
+    font-size: 15px;
+    color: #666;
+}
+
+.board.locked .cell {
+    background: #e8dcc5 !important;
+    cursor: default;
+}
+
+.board.locked .cell:hover {
+    border-color: #ddd;
+}
+
+
+/* =========================
+   END MESSAGE
+========================= */
+
+.end-message {
+    display: none;
+
+    margin-top: 18px;
+
+    font-size: 15px;
+
+    color: #666;
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<h1>Forked Up</h1>
+
+<div class="subtitle">
+    Create groups of four!
+</div>
+
+
+<!-- =====================
+     COLORS
+====================== -->
+
+<div class="colors">
+
+    <button
+        class="color-button green selected"
+        data-color="green">
+    </button>
+
+    <button
+        class="color-button blue"
+        data-color="blue">
+    </button>
+
+    <button
+        class="color-button yellow"
+        data-color="yellow">
+    </button>
+
+    <button
+        class="color-button orange"
+        data-color="orange">
+    </button>
+
+</div>
+
+
+<!-- =====================
+     TOOLS
+====================== -->
+
+<div class="tools">
+
+    <button
+        class="tool-button selected"
+        data-tool="filled"
+        title="Filled square">
+        ■
+    </button>
+
+    <button
+        class="tool-button"
+        data-tool="open"
+        title="Open circle">
+        ○
+    </button>
+
+    <button
+        class="tool-button"
+        data-tool="closed"
+        title="Closed circle">
+        ●
+    </button>
+
+    <button
+        class="tool-button"
+        data-tool="cross"
+        title="Cross">
+        ×
+    </button>
+
+</div>
+
+
+<!-- =====================
+     BOARD
+====================== -->
+
+<div class="board-wrapper">
+
+    <div
+        class="board"
+        id="board">
+
+        <svg
+            id="arrowLayer"
+            class="arrow-layer"
+            xmlns="http://www.w3.org/2000/svg">
+        </svg>
+
+    </div>
+
+</div>
+
+
+<!-- =====================
+     NAVIGATION
+====================== -->
+
+<div class="bottom-buttons">
+
+    <button
+        class="bottom-button"
+        id="previousPuzzle">
+
+        ← Previous
+
+    </button>
+
+
+    <button
+        class="bottom-button"
+        id="reset">
+
+        Reset
+
+    </button>
+
+
+    <button
+        class="bottom-button"
+        id="nextPuzzle">
+
+        Next puzzle →
+
+    </button>
+
+</div>
+
+
+<div class="bottom-buttons">
+
+    <button
+        class="submit-button"
+        id="submitPuzzle">
+
+        Submit
+
+    </button>
+
+</div>
+
+
+<div
+    class="result-message"
+    id="resultMessage">
+</div>
+
+
+<div
+    class="end-message"
+    id="endMessage">
+
+    You've reached the end.
+
+</div>
+
+
+
+<script>
+
+
+/* =====================================================
+   PUZZLES
+===================================================== */
+
+const puzzles = [
+
+    [
+        "A", "B", "C", "C",
+
+        "D", "C", "D", "B",
+
+        "B", "A", "A", "A",
+
+        "D", "D", "C", "B"
+    ],
+
+
+    [
+        "B", "C", "A", "C",
+
+        "D", "B", "A", "A",
+
+        "C", "A", "D", "C",
+
+        "B", "A", "C", "C"
+    ],
+
+
+    [
+        "A", "A", "C", "C",
+
+        "C", "C", "D", "B",
+
+        "B", "C", "D", "C",
+
+        "A", "A", "B", "C"
+    ],
+
+
+    [
+        "C", "C", "C", "B",
+
+        "A", "C", "C", "B",
+
+        "C", "C", "C", "C",
+
+        "D", "D", "D", "D"
+    ],
+
+
+    [
+        "B", "C", "C", "C",
+
+        "A", "D", "A", "C",
+
+        "C", "B", "D", "A",
+
+        "A", "D", "C", "C"
+    ]
+
+];
+
+
+let currentPuzzle = 0;
+
+
+/* =====================================================
+   ANSWERS
+===================================================== */
+
+const answers = [
+
+    [
+        "A", "B", "C", "A",
+
+        "B", "B", "A", "D",
+
+        "C", "D", "D", "B",
+
+        "D", "C", "C", "A"
+    ],
+
+
+    [
+        "A", "B", "B", "B",
+
+        "B", "C", "A", "D",
+
+        "C", "D", "C", "C",
+
+        "D", "A", "D", "A"
+    ],
+
+
+    [
+        "A", "D", "A", "C",
+
+        "B", "B", "D", "D",
+
+        "A", "A", "B", "C",
+
+        "B", "D", "C", "C"
+    ],
+
+
+    [
+        "A", "B", "C", "B",
+
+        "A", "C", "C", "C",
+
+        "A", "B", "D", "D",
+
+        "B", "A", "D", "D"
+    ],
+
+
+    [
+        "A", "B", "B", "B",
+
+        "C", "A", "D", "C",
+
+        "D", "D", "C", "B",
+
+        "A", "C", "D", "A"
+    ]
+
+];
+
+
+/* =====================================================
+   LOCAL STORAGE
+===================================================== */
+
+const STORAGE_KEY = "forkedUpProgress_v1";
+
+let puzzleCompleted = false;
+
+function getDefaultProgress() {
+
+    return {
+        currentPuzzle: 0,
+        puzzles: {}
+    };
+
+}
+
+function loadProgress() {
+
+    try {
+
+        const saved =
+            localStorage.getItem(STORAGE_KEY);
+
+        if (!saved) {
+            return getDefaultProgress();
+        }
+
+        const parsed = JSON.parse(saved);
+
+        if (!parsed || typeof parsed !== "object") {
+            return getDefaultProgress();
+        }
+
+        if (!parsed.puzzles || typeof parsed.puzzles !== "object") {
+            parsed.puzzles = {};
+        }
+
+        if (
+            typeof parsed.currentPuzzle !== "number"
+            ||
+            parsed.currentPuzzle < 0
+            ||
+            parsed.currentPuzzle >= puzzles.length
+        ) {
+            parsed.currentPuzzle = 0;
+        }
+
+        return parsed;
+
+    }
+
+    catch (error) {
+
+        console.warn(
+            "Could not load Forked Up progress.",
+            error
+        );
+
+        return getDefaultProgress();
+
+    }
+
+}
+
+let progress = loadProgress();
+
+currentPuzzle = progress.currentPuzzle;
+
+function saveProgress() {
+
+    try {
+
+        progress.currentPuzzle = currentPuzzle;
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(progress)
+        );
+
+    }
+
+    catch (error) {
+
+        console.warn(
+            "Could not save Forked Up progress.",
+            error
+        );
+
+    }
+
+}
+
+function getPuzzleProgress() {
+
+    const saved =
+        progress.puzzles[String(currentPuzzle)];
+
+    if (!saved || typeof saved !== "object") {
+
+        return {
+            fills: Array(16).fill(null),
+            markers: Array.from(
+                { length: 16 },
+                () => []
+            ),
+            arrows: [],
+            completed: false
+        };
+
+    }
+
+    return {
+        fills:
+            Array.isArray(saved.fills)
+                ? saved.fills
+                : Array(16).fill(null),
+
+        markers:
+            Array.isArray(saved.markers)
+                ? saved.markers
+                : Array.from(
+                    { length: 16 },
+                    () => []
+                ),
+
+        arrows:
+            Array.isArray(saved.arrows)
+                ? saved.arrows
+                : [],
+
+        completed:
+            saved.completed === true
+    };
+
+}
+
+function saveCurrentPuzzle() {
+
+    if (puzzleCompleted) {
+
+        progress.puzzles[String(currentPuzzle)] = {
+            fills: Array(16).fill(null),
+            markers: Array.from(
+                { length: 16 },
+                () => []
+            ),
+            arrows: [],
+            completed: true
+        };
+
+        saveProgress();
+        return;
+
+    }
+
+    const cells = getCells();
+
+    const fills =
+        [...cells].map(
+            cell => cell.dataset.fillColor || null
+        );
+
+    const markers =
+        [...cells].map(
+            cell => {
+
+                const markerContainer =
+                    cell.querySelector(".markers");
+
+                return [...markerContainer.children]
+                    .map(marker => ({
+                        type: getMarkerType(marker),
+                        color: marker.dataset.color || null
+                    }));
+
+            }
+        );
+
+    progress.puzzles[String(currentPuzzle)] = {
+        fills,
+        markers,
+        arrows: arrows.map(arrow => ({ ...arrow })),
+        completed: false
+    };
+
+    saveProgress();
+
+}
+
+function getMarkerType(marker) {
+
+    if (marker.classList.contains("cross")) {
+        return "cross";
+    }
+
+    if (marker.classList.contains("filled")) {
+        return "closed";
+    }
+
+    return "open";
+
+}
+
+function applySavedPuzzleState() {
+
+    const saved = getPuzzleProgress();
+
+    const cells = getCells();
+
+    puzzleCompleted = saved.completed;
+
+    arrows = Array.isArray(saved.arrows)
+        ? saved.arrows.map(arrow => ({ ...arrow }))
+        : [];
+
+    cells.forEach(
+        (cell, index) => {
+
+            const fillColor =
+                saved.fills[index] || null;
+
+            cell.dataset.fillColor =
+                fillColor || "";
+
+            cell.style.background =
+                fillColor && colors[fillColor]
+                    ? colors[fillColor].fill
+                    : "#fafafa";
+
+            const markers =
+                cell.querySelector(".markers");
+
+            markers.innerHTML = "";
+
+            const savedMarkers =
+                Array.isArray(saved.markers[index])
+                    ? saved.markers[index]
+                    : [];
+
+            savedMarkers.forEach(
+                savedMarker => {
+
+                    if (
+                        !savedMarker
+                        ||
+                        !colors[savedMarker.color]
+                    ) {
+                        return;
+                    }
+
+                    const marker =
+                        document.createElement("div");
+
+                    marker.classList.add("marker");
+
+                    if (savedMarker.type === "closed") {
+                        marker.classList.add("filled");
+                    }
+
+                    if (savedMarker.type === "cross") {
+                        marker.classList.add("cross");
+                    }
+
+                    marker.style.color =
+                        colors[savedMarker.color].line;
+
+                    marker.dataset.color =
+                        savedMarker.color;
+
+                    markers.appendChild(marker);
+
+                }
+            );
+
+        }
+    );
+
+    if (puzzleCompleted) {
+        completePuzzle(false);
+    }
+    else {
+        unlockPuzzle();
+    }
+
+    renderArrows();
+
+}
+
+
+
+/* =====================================================
+   PIECES
+===================================================== */
+
+const pieces = {
+
+    A:
+        "https://lichess1.org/assets/piece/rhosgfx/wN.svg",
+
+    B:
+        "https://lichess1.org/assets/piece/rhosgfx/wB.svg",
+
+    C:
+        "https://lichess1.org/assets/piece/rhosgfx/wR.svg",
+
+    D:
+        "https://lichess1.org/assets/piece/rhosgfx/wP.svg"
+
+};
+
+
+/* =====================================================
+   COLORS
+===================================================== */
+
+const colors = {
+
+    green: {
+        fill: "#cfe6d0",
+        line: "#70ad72"
+    },
+
+    blue: {
+        fill: "#cbdcf2",
+        line: "#6f9edb"
+    },
+
+    yellow: {
+        fill: "#f5e9ad",
+        line: "#d0ae28"
+    },
+
+    orange: {
+        fill: "#f5d1b0",
+        line: "#e89a55"
+    }
+
+};
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let selectedColor = "green";
+
+let selectedTool = "filled";
+
+let arrows = [];
+
+let dragging = false;
+
+let dragStart = null;
+
+let dragCurrent = null;
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const board =
+    document.getElementById("board");
+
+const arrowLayer =
+    document.getElementById("arrowLayer");
+
+const endMessage =
+    document.getElementById("endMessage");
+
+const submitPuzzleButton =
+    document.getElementById("submitPuzzle");
+
+const resultMessage =
+    document.getElementById("resultMessage");
+
+
+/* =====================================================
+   CREATE BOARD
+===================================================== */
+
+function createBoard() {
+
+    document
+        .querySelectorAll(".cell")
+        .forEach(
+            cell => cell.remove()
+        );
+
+
+    const puzzle =
+        puzzles[currentPuzzle];
+
+
+    puzzle.forEach(
+        (pieceType, index) => {
+
+            const cell =
+                document.createElement("div");
+
+
+            cell.className = "cell";
+
+            cell.dataset.index = index;
+
+
+            /* PIECE */
+
+            const img =
+                document.createElement("img");
+
+
+            img.className = "piece";
+
+            img.src =
+                pieces[pieceType];
+
+            img.alt = pieceType;
+
+
+            cell.appendChild(img);
+
+
+            /* MARKERS */
+
+            const markers =
+                document.createElement("div");
+
+
+            markers.className = "markers";
+
+
+            cell.appendChild(markers);
+
+
+            /* =====================
+               SPECIAL SLASHES
+
+               Puzzle 2:
+               black: B4 (13) + C4 (14)
+               gray:  C1 (2)  + B3 (9)
+            ===================== */
+
+            if (
+                currentPuzzle === 1
+                &&
+                (index === 13 || index === 14)
+            ) {
+                const slash = document.createElement("div");
+                slash.className = "corner-slash";
+                cell.appendChild(slash);
+            }
+
+            if (
+                currentPuzzle === 1
+                &&
+                (index === 2 || index === 9)
+            ) {
+                const slash = document.createElement("div");
+                slash.className = "corner-slash white-slash";
+                cell.appendChild(slash);
+            }
+
+
+            board.appendChild(cell);
+
+        }
+    );
+
+
+    setupCellEvents();
+
+}
+
+
+/* =====================================================
+   GET CELLS
+===================================================== */
+
+function getCells() {
+
+    return document.querySelectorAll(".cell");
+
+}
+
+
+/* =====================================================
+   CELL EVENTS
+===================================================== */
+
+function setupCellEvents() {
+
+    const cells = getCells();
+
+
+    cells.forEach(
+        cell => {
+
+
+            /* =====================
+               CLICK
+            ===================== */
+
+            cell.addEventListener(
+                "click",
+                () => {
+
+                    if (puzzleCompleted) {
+                        return;
+                    }
+
+
+                    if (
+                        cell.dataset.skipClick ===
+                        "true"
+                    ) {
+
+                        cell.dataset.skipClick =
+                            "false";
+
+                        return;
+
+                    }
+
+
+                    const color =
+                        colors[selectedColor];
+
+
+                    /* FILLED CELL */
+
+                    if (
+                        selectedTool === "filled"
+                    ) {
+
+                        /* Puzzle 2 slash rules */
+                        if (currentPuzzle === 1) {
+                            const cellIndex = Number(cell.dataset.index);
+                            const restrictedPairs = [
+                                [13, 14, "B4 and C4 cannot be the same color."],
+                                [2, 9, "C1 and B3 cannot be the same color."]
+                            ];
+
+                            for (const [a, b, message] of restrictedPairs) {
+                                if (cellIndex === a || cellIndex === b) {
+                                    const otherIndex = cellIndex === a ? b : a;
+                                    const otherCell = getCells()[otherIndex];
+
+                                    if (
+                                        cell.dataset.fillColor !== selectedColor
+                                        &&
+                                        otherCell.dataset.fillColor === selectedColor
+                                    ) {
+                                        resultMessage.textContent = message;
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (
+                            cell.dataset.fillColor
+                            ===
+                            selectedColor
+                        ) {
+
+                            cell.style.background =
+                                "#fafafa";
+
+                            cell.dataset.fillColor = "";
+
+                        }
+
+                        else {
+
+                            cell.style.background =
+                                color.fill;
+
+                            cell.dataset.fillColor =
+                                selectedColor;
+
+                        }
+
+                        saveCurrentPuzzle();
+
+                        return;
+
+                    }
+
+
+                    /* MARKERS */
+
+                    const markers =
+                        cell.querySelector(
+                            ".markers"
+                        );
+
+
+                    const marker =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    marker.classList.add(
+                        "marker"
+                    );
+
+
+                    marker.style.color =
+                        color.line;
+
+
+                    if (
+                        selectedTool === "open"
+                    ) {
+
+                        marker.classList.add(
+                            "open"
+                        );
+
+                    }
+
+
+                    if (
+                        selectedTool === "closed"
+                    ) {
+
+                        marker.classList.add(
+                            "filled"
+                        );
+
+                    }
+
+
+                    if (
+                        selectedTool === "cross"
+                    ) {
+
+                        marker.classList.add(
+                            "cross"
+                        );
+
+                    }
+
+
+                    /*
+                     * Same marker + same color
+                     * toggles off.
+                     */
+
+                    const existing =
+                        [
+                            ...markers.children
+                        ].find(
+                            existingMarker => {
+
+                                return (
+
+                                    existingMarker.className
+                                    ===
+                                    marker.className
+
+                                    &&
+
+                                    existingMarker.style.color
+                                    ===
+                                    marker.style.color
+
+                                );
+
+                            }
+                        );
+
+
+                    if (existing) {
+
+                        existing.remove();
+
+                    }
+
+                    else {
+
+                        marker.dataset.color =
+                            selectedColor;
+
+                        markers.appendChild(
+                            marker
+                        );
+
+                    }
+
+                    saveCurrentPuzzle();
+
+                }
+            );
+
+
+            /* =====================
+               START ARROW
+            ===================== */
+
+            cell.addEventListener(
+                "mousedown",
+                event => {
+
+                    if (puzzleCompleted) {
+                        return;
+                    }
+
+                    if (
+                        event.button !== 0
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    dragging = true;
+
+                    dragStart =
+                        Number(
+                            cell.dataset.index
+                        );
+
+                    dragCurrent =
+                        dragStart;
+
+
+                    drawTemporaryArrow();
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   COLOR BUTTONS
+===================================================== */
+
+document
+    .querySelectorAll(".color-button")
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    if (puzzleCompleted) {
+                        return;
+                    }
+
+                    selectedColor =
+                        button.dataset.color;
+
+
+                    document
+                        .querySelectorAll(
+                            ".color-button"
+                        )
+                        .forEach(
+                            b =>
+                                b.classList.remove(
+                                    "selected"
+                                )
+                        );
+
+
+                    button.classList.add(
+                        "selected"
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   TOOL BUTTONS
+===================================================== */
+
+document
+    .querySelectorAll(".tool-button")
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    if (puzzleCompleted) {
+                        return;
+                    }
+
+                    selectedTool =
+                        button.dataset.tool;
+
+
+                    document
+                        .querySelectorAll(
+                            ".tool-button"
+                        )
+                        .forEach(
+                            b =>
+                                b.classList.remove(
+                                    "selected"
+                                )
+                        );
+
+
+                    button.classList.add(
+                        "selected"
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   MOUSE MOVE
+===================================================== */
+
+document.addEventListener(
+    "mousemove",
+    event => {
+
+        if (puzzleCompleted || !dragging) {
+            return;
+        }
+
+
+        const target =
+            document.elementFromPoint(
+                event.clientX,
+                event.clientY
+            );
+
+
+        if (!target) {
+            return;
+        }
+
+
+        const cell =
+            target.closest(".cell");
+
+
+        if (!cell) {
+            return;
+        }
+
+
+        dragCurrent =
+            Number(
+                cell.dataset.index
+            );
+
+
+        drawTemporaryArrow();
+
+    }
+);
+
+
+/* =====================================================
+   MOUSE UP
+===================================================== */
+
+document.addEventListener(
+    "mouseup",
+    event => {
+
+        if (!dragging) {
+            return;
+        }
+
+        if (puzzleCompleted) {
+            dragging = false;
+            return;
+        }
+
+
+        dragging = false;
+
+
+        const target =
+            document.elementFromPoint(
+                event.clientX,
+                event.clientY
+            );
+
+
+        clearTemporaryArrow();
+
+
+        if (!target) {
+            return;
+        }
+
+
+        const cell =
+            target.closest(".cell");
+
+
+        if (!cell) {
+            return;
+        }
+
+
+        const end =
+            Number(
+                cell.dataset.index
+            );
+
+
+        /*
+         * Same cell = no arrow.
+         */
+
+        if (
+            dragStart === end
+        ) {
+
+            return;
+
+        }
+
+
+        toggleArrow(
+            dragStart,
+            end
+        );
+
+
+        /*
+         * Prevent the normal click
+         * from adding a marker.
+         */
+
+        cell.dataset.skipClick =
+            "true";
+
+    }
+);
+
+
+/* =====================================================
+   TOGGLE ARROW
+=====================================================
+
+   Exact same direction + color:
+   remove that arrow.
+
+   Same direction + different color:
+   add another arrow.
+
+===================================================== */
+
+function toggleArrow(
+    from,
+    to
+) {
+
+    const existingIndex =
+        arrows.findIndex(
+            arrow =>
+
+                arrow.from === from
+
+                &&
+
+                arrow.to === to
+
+                &&
+
+                arrow.color === selectedColor
+        );
+
+
+    if (
+        existingIndex !== -1
+    ) {
+
+        arrows.splice(
+            existingIndex,
+            1
+        );
+
+    }
+
+    else {
+
+        arrows.push({
+
+            from: from,
+
+            to: to,
+
+            color: selectedColor
+
+        });
+
+    }
+
+
+    renderArrows();
+
+    saveCurrentPuzzle();
+
+}
+
+
+/* =====================================================
+   CELL CENTER
+===================================================== */
+
+function getCellCenter(
+    index
+) {
+
+    const cells =
+        getCells();
+
+
+    const cell =
+        cells[index];
+
+
+    const boardRect =
+        board.getBoundingClientRect();
+
+
+    const cellRect =
+        cell.getBoundingClientRect();
+
+
+    return {
+
+        x:
+            cellRect.left -
+            boardRect.left +
+            cellRect.width / 2,
+
+        y:
+            cellRect.top -
+            boardRect.top +
+            cellRect.height / 2
+
+    };
+
+}
+
+
+/* =====================================================
+   POINT ON CIRCLE
+===================================================== */
+
+function pointOnCircle(
+    center,
+    target,
+    radius
+) {
+
+    const dx =
+        target.x - center.x;
+
+
+    const dy =
+        target.y - center.y;
+
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    if (
+        distance === 0
+    ) {
+
+        return center;
+
+    }
+
+
+    return {
+
+        x:
+            center.x +
+            (dx / distance) *
+            radius,
+
+        y:
+            center.y +
+            (dy / distance) *
+            radius
+
+    };
+
+}
+
+
+/* =====================================================
+   GET PARALLEL ARROW OFFSET
+=====================================================
+
+   Voor meerdere pijlen met dezelfde
+   richting krijgen ze verschillende
+   posities naast elkaar.
+
+   1 pijl:
+       midden
+
+   2 pijlen:
+       links + rechts
+
+   3 pijlen:
+       links + midden + rechts
+
+   4 pijlen:
+       verder uit elkaar
+
+===================================================== */
+
+function getArrowOffset(
+    arrow
+) {
+
+    const sameArrows =
+        arrows.filter(
+            other =>
+
+                other.from === arrow.from
+
+                &&
+
+                other.to === arrow.to
+        );
+
+
+    const index =
+        sameArrows.indexOf(
+            arrow
+        );
+
+
+    const count =
+        sameArrows.length;
+
+
+    if (
+        count <= 1
+    ) {
+
+        return 0;
+
+    }
+
+
+    const spacing = 9;
+
+
+    /*
+     * Zorg dat de pijlen
+     * symmetrisch rond het midden
+     * komen te staan.
+     */
+
+    return (
+        index -
+        (count - 1) / 2
+    ) * spacing;
+
+}
+
+
+/* =====================================================
+   RENDER ARROWS
+===================================================== */
+
+function renderArrows() {
+
+    arrowLayer.innerHTML = "";
+
+
+    arrows.forEach(
+        arrow => {
+
+            drawArrow(
+                arrow.from,
+                arrow.to,
+                colors[
+                    arrow.color
+                ].line,
+                getArrowOffset(
+                    arrow
+                )
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   DRAW ARROW
+===================================================== */
+
+function drawArrow(
+    fromIndex,
+    toIndex,
+    color,
+    offset = 0
+) {
+
+    const startCenter =
+        getCellCenter(
+            fromIndex
+        );
+
+
+    const endCenter =
+        getCellCenter(
+            toIndex
+        );
+
+
+    const dx =
+        endCenter.x -
+        startCenter.x;
+
+
+    const dy =
+        endCenter.y -
+        startCenter.y;
+
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    if (
+        distance === 0
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * Eenheidvector in de richting
+     * van start naar eind.
+     */
+
+    const ux =
+        dx / distance;
+
+
+    const uy =
+        dy / distance;
+
+
+    /*
+     * Zijwaartse vector.
+     *
+     * Hiermee schuiven we
+     * parallelle pijlen uit elkaar.
+     */
+
+    const px =
+        -uy;
+
+
+    const py =
+        ux;
+
+
+    /*
+     * Offset toepassen op beide punten.
+     */
+
+    const shiftedStart = {
+
+        x:
+            startCenter.x +
+            px * offset,
+
+        y:
+            startCenter.y +
+            py * offset
+
+    };
+
+
+    const shiftedEnd = {
+
+        x:
+            endCenter.x +
+            px * offset,
+
+        y:
+            endCenter.y +
+            py * offset
+
+    };
+
+
+    /*
+     * Pijl begint/eindigt op
+     * een denkbeeldige cirkel rond
+     * het midden van het vakje.
+     */
+
+    const radius = 23;
+
+
+    const start =
+        pointOnCircle(
+            shiftedStart,
+            shiftedEnd,
+            radius
+        );
+
+
+    const end =
+        pointOnCircle(
+            shiftedEnd,
+            shiftedStart,
+            radius
+        );
+
+
+    const arrowDX =
+        end.x -
+        start.x;
+
+
+    const arrowDY =
+        end.y -
+        start.y;
+
+
+    const arrowLength =
+        Math.sqrt(
+            arrowDX * arrowDX +
+            arrowDY * arrowDY
+        );
+
+
+    if (
+        arrowLength === 0
+    ) {
+
+        return;
+
+    }
+
+
+    const arrowUX =
+        arrowDX /
+        arrowLength;
+
+
+    const arrowUY =
+        arrowDY /
+        arrowLength;
+
+
+    /* =====================
+       ARROW HEAD
+    ===================== */
+
+    const headLength = 9;
+
+    const headWidth = 5;
+
+
+    const lineEnd = {
+
+        x:
+            end.x -
+            arrowUX *
+            headLength,
+
+        y:
+            end.y -
+            arrowUY *
+            headLength
+
+    };
+
+
+    const left = {
+
+        x:
+            lineEnd.x -
+            arrowUX *
+            headWidth -
+            arrowUY *
+            headWidth,
+
+        y:
+            lineEnd.y -
+            arrowUY *
+            headWidth +
+            arrowUX *
+            headWidth
+
+    };
+
+
+    const right = {
+
+        x:
+            lineEnd.x -
+            arrowUX *
+            headWidth +
+            arrowUY *
+            headWidth,
+
+        y:
+            lineEnd.y -
+            arrowUY *
+            headWidth -
+            arrowUX *
+            headWidth
+
+    };
+
+
+    /* =====================
+       LINE
+    ===================== */
+
+    const line =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
+
+
+    line.setAttribute(
+        "x1",
+        start.x
+    );
+
+    line.setAttribute(
+        "y1",
+        start.y
+    );
+
+    line.setAttribute(
+        "x2",
+        lineEnd.x
+    );
+
+    line.setAttribute(
+        "y2",
+        lineEnd.y
+    );
+
+    line.setAttribute(
+        "stroke",
+        color
+    );
+
+    line.classList.add(
+        "arrow"
+    );
+
+
+    /* =====================
+       ARROW HEAD
+    ===================== */
+
+    const polygon =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "polygon"
+        );
+
+
+    polygon.setAttribute(
+        "points",
+        `
+        ${end.x},${end.y}
+        ${left.x},${left.y}
+        ${right.x},${right.y}
+        `
+    );
+
+
+    polygon.setAttribute(
+        "fill",
+        color
+    );
+
+
+    arrowLayer.appendChild(
+        line
+    );
+
+
+    arrowLayer.appendChild(
+        polygon
+    );
+
+}
+
+
+/* =====================================================
+   TEMPORARY ARROW
+===================================================== */
+
+function drawTemporaryArrow() {
+
+    clearTemporaryArrow();
+
+
+    if (
+        dragStart === null
+
+        ||
+
+        dragCurrent === null
+
+        ||
+
+        dragStart === dragCurrent
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * Tijdens slepen tonen we een
+     * tijdelijke pijl.
+     */
+
+    drawArrow(
+        dragStart,
+        dragCurrent,
+        colors[
+            selectedColor
+        ].line
+    );
+
+}
+
+
+function clearTemporaryArrow() {
+
+    renderArrows();
+
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+document
+    .getElementById("reset")
+    .addEventListener(
+        "click",
+        () => {
+
+            resetPuzzle();
+
+        }
+    );
+
+
+function resetPuzzle() {
+
+    if (puzzleCompleted) {
+        return;
+    }
+
+    const cells =
+        getCells();
+
+
+    /* Clear fills */
+
+    cells.forEach(
+        cell => {
+
+            cell.style.background =
+                "#fafafa";
+
+            cell.dataset.fillColor = "";
+
+        }
+    );
+
+
+    /* Clear markers */
+
+    cells.forEach(
+        cell => {
+
+            const markers =
+                cell.querySelector(
+                    ".markers"
+                );
+
+
+            markers.innerHTML = "";
+
+        }
+    );
+
+
+    /* Clear arrows */
+
+    arrows = [];
+
+
+    resultMessage.textContent = "";
+
+    renderArrows();
+
+    saveCurrentPuzzle();
+
+}
+
+
+
+/* =====================================================
+   PREPARE PUZZLE
+===================================================== */
+
+function prepareNewPuzzle() {
+
+    dragging = false;
+    dragStart = null;
+    dragCurrent = null;
+
+    endMessage.style.display = "none";
+    resultMessage.textContent = "";
+
+    selectedColor = "green";
+    selectedTool = "filled";
+
+    document
+        .querySelectorAll(".color-button")
+        .forEach(button => {
+            button.classList.toggle(
+                "selected",
+                button.dataset.color === "green"
+            );
+        });
+
+    document
+        .querySelectorAll(".tool-button")
+        .forEach(button => {
+            button.classList.toggle(
+                "selected",
+                button.dataset.tool === "filled"
+            );
+        });
+
+    arrows = [];
+
+    createBoard();
+    applySavedPuzzleState();
+
+}
+
+
+/* =====================================================
+   SUBMIT / ANSWER CHECKING
+===================================================== */
+
+function allCellsColored() {
+
+    return [...getCells()]
+        .every(cell => Boolean(cell.dataset.fillColor));
+
+}
+
+function getCellColor(cell) {
+
+    return cell.dataset.fillColor || null;
+
+}
+
+function arraysEqual(a, b) {
+
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    return a.every(
+        (value, index) => value === b[index]
+    );
+
+}
+
+function checkAnswer() {
+
+    if (puzzleCompleted) {
+        return;
+    }
+
+    if (!allCellsColored()) {
+
+        resultMessage.textContent =
+            "Color all 16 squares before submitting.";
+
+        return;
+
+    }
+
+    const cells = [...getCells()];
+
+    /* Puzzle 2 slash rules */
+    if (currentPuzzle === 1) {
+        const restrictedPairs = [
+            [13, 14, "B4 and C4 cannot be the same color."],
+            [2, 9, "C1 and B3 cannot be the same color."]
+        ];
+
+        for (const [a, b, message] of restrictedPairs) {
+            if (getCellColor(cells[a]) === getCellColor(cells[b])) {
+                resultMessage.textContent = message;
+                return;
+            }
+        }
+    }
+
+    const playerColors = [
+        "green",
+        "blue",
+        "yellow",
+        "orange"
+    ];
+
+    const usedAnswerGroups = new Set();
+
+    let correct = true;
+
+    for (const color of playerColors) {
+
+        const playerCells =
+            cells
+                .map((cell, index) =>
+                    getCellColor(cell) === color
+                        ? index
+                        : -1
+                )
+                .filter(index => index !== -1);
+
+        if (playerCells.length !== 4) {
+            correct = false;
+            break;
+        }
+
+        let matchingGroup = -1;
+
+        for (let group = 0; group < 4; group++) {
+
+            if (usedAnswerGroups.has(group)) {
+                continue;
+            }
+
+            const answerCells =
+                answers[currentPuzzle]
+                    .map((letter, index) =>
+                        letter === String.fromCharCode(65 + group)
+                            ? index
+                            : -1
+                    )
+                    .filter(index => index !== -1);
+
+            if (arraysEqual(playerCells, answerCells)) {
+                matchingGroup = group;
+                break;
+            }
+
+        }
+
+        if (matchingGroup === -1) {
+            correct = false;
+            break;
+        }
+
+        usedAnswerGroups.add(matchingGroup);
+
+    }
+
+    if (correct) {
+        completePuzzle(true);
+    }
+    else {
+        showIncorrect();
+    }
+
+}
+
+function showIncorrect() {
+
+    resultMessage.textContent =
+        "Not quite — try again!";
+
+    saveCurrentPuzzle();
+
+}
+
+function completePuzzle(save = true) {
+
+    puzzleCompleted = true;
+
+    dragging = false;
+    dragStart = null;
+    dragCurrent = null;
+
+    arrows = [];
+    renderArrows();
+
+    getCells().forEach(
+        cell => {
+
+            const markers =
+                cell.querySelector(".markers");
+
+            markers.innerHTML = "";
+
+            cell.style.background = "#e8dcc5";
+            cell.dataset.fillColor = "";
+
+        }
+    );
+
+    board.classList.add("locked");
+
+    document
+        .querySelectorAll(".color-button, .tool-button")
+        .forEach(button => {
+            button.disabled = true;
+        });
+
+    submitPuzzleButton.disabled = true;
+
+    resultMessage.textContent =
+        "Puzzle complete! 🎉";
+
+    if (save) {
+        progress.puzzles[String(currentPuzzle)] = {
+            fills: Array(16).fill(null),
+            markers: Array.from(
+                { length: 16 },
+                () => []
+            ),
+            arrows: [],
+            completed: true
+        };
+
+        saveProgress();
+    }
+
+}
+
+function unlockPuzzle() {
+
+    puzzleCompleted = false;
+
+    board.classList.remove("locked");
+
+    document
+        .querySelectorAll(".color-button, .tool-button")
+        .forEach(button => {
+            button.disabled = false;
+        });
+
+    submitPuzzleButton.disabled = false;
+
+}
+
+
+/* =====================================================
+   NEXT PUZZLE
+===================================================== */
+
+document
+    .getElementById("nextPuzzle")
+    .addEventListener(
+        "click",
+        () => {
+
+            if (
+                currentPuzzle
+                <
+                puzzles.length - 1
+            ) {
+
+                saveCurrentPuzzle();
+
+                currentPuzzle++;
+
+                progress.currentPuzzle =
+                    currentPuzzle;
+
+                saveProgress();
+
+                prepareNewPuzzle();
+
+            }
+
+            else {
+
+                endMessage.style.display =
+                    "block";
+
+                progress.currentPuzzle =
+                    currentPuzzle;
+
+                saveProgress();
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   PREVIOUS PUZZLE
+===================================================== */
+
+document
+    .getElementById("previousPuzzle")
+    .addEventListener(
+        "click",
+        () => {
+
+            if (
+                currentPuzzle === 0
+            ) {
+
+                return;
+
+            }
+
+            saveCurrentPuzzle();
+
+            currentPuzzle--;
+
+            progress.currentPuzzle =
+                currentPuzzle;
+
+            saveProgress();
+
+            prepareNewPuzzle();
+
+        }
+    );
+
+
+/* =====================================================
+   SUBMIT BUTTON
+===================================================== */
+
+submitPuzzleButton.addEventListener(
+    "click",
+    checkAnswer
+);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+createBoard();
+applySavedPuzzleState();
+
+</script>
+
+</body>
+</html>
