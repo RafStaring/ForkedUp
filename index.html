@@ -22,6 +22,44 @@ body {
     user-select: none;
 }
 
+/* =========================
+   STAR HUD
+========================= */
+
+.star-hud {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    pointer-events: none;
+    z-index: 100;
+
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.star-value {
+    white-space: nowrap;
+}
+
+.star-box.total {
+    text-align: right;
+}
+
+@media (max-width: 600px) {
+    .star-hud {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        font-size: 14px;
+    }
+}
+
 h1 {
     margin: 0 0 5px;
     font-size: 28px;
@@ -413,6 +451,18 @@ h1 {
 
 <body>
 
+<!-- =====================
+     STAR HUD
+====================== -->
+
+<div class="star-hud">
+
+    <div class="star-value" id="levelStars">⭐ 1</div>
+
+    <div class="star-value total" id="totalStars">Total: ⭐ 0</div>
+
+</div>
+
 
 <h1>Forked Up</h1>
 
@@ -639,6 +689,64 @@ const puzzles = [
 
 
 let currentPuzzle = 0;
+
+
+/* =====================================================
+   STARS
+===================================================== */
+
+const puzzleStars = [
+    1,  // Puzzle 1
+    4,  // Puzzle 2
+    3,  // Puzzle 3
+    2,  // Puzzle 4
+    3   // Puzzle 5
+];
+
+const levelStarsElement =
+    document.getElementById("levelStars");
+
+const totalStarsElement =
+    document.getElementById("totalStars");
+
+function getTotalStars() {
+
+    return puzzleStars.reduce(
+        (total, stars, index) => {
+
+            const puzzle =
+                progress.puzzles[String(index)];
+
+            return total +
+                (puzzle && puzzle.completed
+                    ? stars
+                    : 0);
+
+        },
+        0
+    );
+
+}
+
+function updateStarDisplay() {
+
+    if (!levelStarsElement || !totalStarsElement) {
+        return;
+    }
+
+    const stars =
+        puzzleStars[currentPuzzle];
+
+    levelStarsElement.textContent =
+        `⭐ ${stars}`;
+
+    const total =
+        getTotalStars();
+
+    totalStarsElement.textContent =
+        `Total: ⭐ ${total}`;
+
+}
 
 
 /* =====================================================
@@ -2360,6 +2468,8 @@ function resetPuzzle() {
 
 function prepareNewPuzzle() {
 
+    updateStarDisplay();
+
     dragging = false;
     dragStart = null;
     dragCurrent = null;
@@ -2571,7 +2681,7 @@ function completePuzzle(save = true) {
     submitPuzzleButton.disabled = true;
 
     resultMessage.textContent =
-        "Puzzle complete!";
+        "Puzzle complete! 🎉";
 
     if (save) {
         progress.puzzles[String(currentPuzzle)] = {
@@ -2586,6 +2696,8 @@ function completePuzzle(save = true) {
 
         saveProgress();
     }
+
+    updateStarDisplay();
 
 }
 
@@ -2700,6 +2812,7 @@ submitPuzzleButton.addEventListener(
 
 createBoard();
 applySavedPuzzleState();
+updateStarDisplay();
 
 </script>
 
