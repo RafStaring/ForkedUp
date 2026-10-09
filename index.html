@@ -481,11 +481,11 @@ function getTotalStars() {
 function updateStarDisplay() {
     const stars = puzzleStars[currentPuzzle];
     levelStarsElement.textContent =
-        `${stars} ${stars === 1 ? "ster" : ""}`;
+        `${stars} ${stars === 1 ? "" : ""}`;
 
     const total = getTotalStars();
     totalStarsElement.textContent =
-        `${total} ${total === 1 ? "ster" : ""}`;
+        `${total} ${total === 1 ? "" : ""}`;
 }
 
 function animateStarUnlock(previousTotal, newTotal, starsEarned) {
@@ -498,7 +498,7 @@ function animateStarUnlock(previousTotal, newTotal, starsEarned) {
     const startY = boardRect.top + boardRect.height / 2;
     const endX = targetRect.left + targetRect.width / 2;
     const endY = targetRect.top + targetRect.height / 2;
-    const label = n => `${n} ${n === 1 ? "ster" : ""}`;
+    const label = n => `${n} ${n === 1 ? "" : ""}`;
 
     totalEl.textContent = label(previousTotal);
     totalEl.classList.remove("total-stars-pop");
