@@ -330,11 +330,11 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 <div class="star-hud">
     <div class="star-box">
         <div class="star-title">Level</div>
-        <div class="star-value" id="levelStars">⭐ 1 ster</div>
+        <div class="star-value" id="levelStars">1</div>
     </div>
     <div class="star-box total">
         <div class="star-title">Total</div>
-        <div class="star-value" id="totalStars">⭐ 0 sterren</div>
+        <div class="star-value" id="totalStars">0</div>
     </div>
 </div>
 
@@ -481,11 +481,11 @@ function getTotalStars() {
 function updateStarDisplay() {
     const stars = puzzleStars[currentPuzzle];
     levelStarsElement.textContent =
-        `⭐ ${stars} ${stars === 1 ? "ster" : "sterren"}`;
+        `${stars} ${stars === 1 ? "ster" : ""}`;
 
     const total = getTotalStars();
     totalStarsElement.textContent =
-        `⭐ ${total} ${total === 1 ? "ster" : "sterren"}`;
+        `${total} ${total === 1 ? "ster" : ""}`;
 }
 
 function animateStarUnlock(previousTotal, newTotal, starsEarned) {
@@ -498,7 +498,7 @@ function animateStarUnlock(previousTotal, newTotal, starsEarned) {
     const startY = boardRect.top + boardRect.height / 2;
     const endX = targetRect.left + targetRect.width / 2;
     const endY = targetRect.top + targetRect.height / 2;
-    const label = n => `⭐ ${n} ${n === 1 ? "ster" : "sterren"}`;
+    const label = n => `${n} ${n === 1 ? "ster" : ""}`;
 
     totalEl.textContent = label(previousTotal);
     totalEl.classList.remove("total-stars-pop");
@@ -506,7 +506,7 @@ function animateStarUnlock(previousTotal, newTotal, starsEarned) {
     for (let i = 0; i < starsEarned; i++) {
         const star = document.createElement("span");
         star.className = "star-fly";
-        star.textContent = "⭐";
+        star.textContent = "";
 
         const offset = (i - (starsEarned - 1) / 2) * 13;
         star.style.left = `${startX - 13 + offset}px`;
