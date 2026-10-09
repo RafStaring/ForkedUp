@@ -38,17 +38,36 @@ body {
 
     pointer-events: none;
     z-index: 100;
-
-    font-size: 15px;
-    font-weight: bold;
 }
 
-.star-value {
-    white-space: nowrap;
+.star-box {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    padding: 7px 11px;
+
+    font-size: 14px;
+    line-height: 1.25;
+
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+
+    text-align: left;
 }
 
 .star-box.total {
     text-align: right;
+}
+
+.star-title {
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 1px;
+}
+
+.star-value {
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 @media (max-width: 600px) {
@@ -56,7 +75,15 @@ body {
         top: 8px;
         left: 8px;
         right: 8px;
-        font-size: 14px;
+    }
+
+    .star-box {
+        padding: 6px 9px;
+        font-size: 13px;
+    }
+
+    .star-title {
+        font-size: 10px;
     }
 }
 
@@ -430,6 +457,50 @@ h1 {
     border-color: #ddd;
 }
 
+.board.locked::after {
+  content: "✓";
+  position: absolute;
+  top: -13px;
+  right: -13px;
+  z-index: 40;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #222;
+  background: #c9b89b;
+  border: 2px solid #222;
+  font-size: 23px;
+  font-weight: bold;
+  line-height: 1;
+  box-shadow: 0 2px 5px rgba(0,0,0,.18);
+  animation: checkmark-pop .42s cubic-bezier(.2,1.6,.4,1) both;
+  pointer-events: none;
+}
+@keyframes checkmark-pop {
+  0% { transform: scale(0) rotate(-25deg); opacity: 0; }
+  75% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.star-fly {
+  position: fixed; z-index: 9999; pointer-events: none;
+  font-size: 27px; line-height: 1;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.2));
+  will-change: transform, opacity;
+}
+.total-stars-pop { animation: total-stars-pop .45s ease-out; }
+@keyframes total-stars-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.35); color: #a87813; }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .board.locked::after, .total-stars-pop { animation: none; }
+}
+
+
 
 /* =========================
    END MESSAGE
@@ -457,9 +528,15 @@ h1 {
 
 <div class="star-hud">
 
-    <div class="star-value" id="levelStars">⭐ 1</div>
+    <div class="star-box">
+        <div class="star-title">Level</div>
+        <div class="star-value" id="levelStars">⭐ 1 ster</div>
+    </div>
 
-    <div class="star-value total" id="totalStars">Total: ⭐ 0</div>
+    <div class="star-box total">
+        <div class="star-title">Total</div>
+        <div class="star-value" id="totalStars">⭐ 0 sterren</div>
+    </div>
 
 </div>
 
@@ -738,15 +815,68 @@ function updateStarDisplay() {
         puzzleStars[currentPuzzle];
 
     levelStarsElement.textContent =
-        `⭐ ${stars}`;
+        `⭐ ${stars} ${stars === 1 ? "ster" : "sterren"}`;
 
     const total =
         getTotalStars();
 
     totalStarsElement.textContent =
-        `Total: ⭐ ${total}`;
+        `⭐ ${total} ${total === 1 ? "ster" : "sterren"}`;
 
 }
+
+function animateStarUnlock(previousTotal, newTotal, starsEarned) {
+  const totalEl = totalStarsElement;
+  if (!board || !totalEl || starsEarned <= 0) return;
+  const boardRect = board.getBoundingClientRect();
+  const targetRect = totalEl.getBoundingClientRect();
+  const startX = boardRect.left + boardRect.width / 2;
+  const startY = boardRect.top + boardRect.height / 2;
+  const endX = targetRect.left + targetRect.width / 2;
+  const endY = targetRect.top + targetRect.height / 2;
+  const label = n => `⭐ ${n} ${n === 1 ? "ster" : "sterren"}`;
+  totalEl.textContent = label(previousTotal);
+  totalEl.classList.remove('total-stars-pop');
+
+  for (let i = 0; i < starsEarned; i++) {
+    const star = document.createElement('span');
+    star.className = 'star-fly';
+    star.textContent = '⭐';
+    const offset = (i - (starsEarned - 1) / 2) * 13;
+    star.style.left = `${startX - 13 + offset}px`;
+    star.style.top = `${startY - 13}px`;
+    document.body.appendChild(star);
+    if (typeof star.animate === 'function') {
+      const dx = endX - (startX + offset);
+      const dy = endY - startY;
+      const anim = star.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+        { transform: `translate(${dx * .55}px,${dy * .55 - 35}px) scale(1.15)`, opacity: 1, offset: .65 },
+        { transform: `translate(${dx}px,${dy}px) scale(.25)`, opacity: 0 }
+      ], { duration: 850, delay: i * 110, easing: 'cubic-bezier(.22,.75,.25,1)', fill: 'forwards' });
+      anim.onfinish = () => star.remove();
+    } else {
+      window.setTimeout(() => star.remove(), 1000 + i * 110);
+    }
+  }
+  const duration = 900 + Math.max(0, starsEarned - 1) * 110;
+  const started = performance.now();
+  function countUp(now) {
+    const progress = Math.min(1, (now - started) / duration);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    totalEl.textContent = label(Math.round(previousTotal + (newTotal - previousTotal) * eased));
+    if (progress < 1) requestAnimationFrame(countUp);
+    else {
+      totalEl.textContent = label(newTotal);
+      totalEl.classList.remove('total-stars-pop');
+      void totalEl.offsetWidth;
+      totalEl.classList.add('total-stars-pop');
+      window.setTimeout(() => totalEl.classList.remove('total-stars-pop'), 500);
+    }
+  }
+  requestAnimationFrame(countUp);
+}
+
 
 
 /* =====================================================
@@ -2646,6 +2776,8 @@ function showIncorrect() {
 }
 
 function completePuzzle(save = true) {
+    const previousTotal = getTotalStars();
+    const starsEarned = puzzleStars[currentPuzzle] || 0;
 
     puzzleCompleted = true;
 
@@ -2681,7 +2813,7 @@ function completePuzzle(save = true) {
     submitPuzzleButton.disabled = true;
 
     resultMessage.textContent =
-        "Puzzle complete!";
+        "Puzzle complete! 🎉";
 
     if (save) {
         progress.puzzles[String(currentPuzzle)] = {
@@ -2698,6 +2830,7 @@ function completePuzzle(save = true) {
     }
 
     updateStarDisplay();
+    if (save) animateStarUnlock(previousTotal, getTotalStars(), starsEarned);
 
 }
 
