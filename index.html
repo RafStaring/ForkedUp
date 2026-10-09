@@ -3,14 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Forked Up</title>
 
 <style>
-
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
@@ -22,86 +18,41 @@ body {
     user-select: none;
 }
 
-/* =========================
-   STAR HUD
-========================= */
-
 .star-hud {
     position: fixed;
     top: 14px;
     left: 14px;
     right: 14px;
-
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-
     pointer-events: none;
     z-index: 100;
 }
 
 .star-box {
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(255,255,255,.96);
     border: 1px solid #ddd;
     border-radius: 10px;
-
     padding: 7px 11px;
-
     font-size: 14px;
     line-height: 1.25;
-
-    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
-
+    box-shadow: 0 2px 7px rgba(0,0,0,.08);
     text-align: left;
 }
 
-.star-box.total {
-    text-align: right;
-}
-
-.star-title {
-    font-size: 11px;
-    color: #777;
-    margin-bottom: 1px;
-}
-
-.star-value {
-    font-weight: bold;
-    white-space: nowrap;
-}
+.star-box.total { text-align: right; }
+.star-title { font-size: 11px; color: #777; margin-bottom: 1px; }
+.star-value { font-weight: bold; white-space: nowrap; }
 
 @media (max-width: 600px) {
-    .star-hud {
-        top: 8px;
-        left: 8px;
-        right: 8px;
-    }
-
-    .star-box {
-        padding: 6px 9px;
-        font-size: 13px;
-    }
-
-    .star-title {
-        font-size: 10px;
-    }
+    .star-hud { top: 8px; left: 8px; right: 8px; }
+    .star-box { padding: 6px 9px; font-size: 13px; }
+    .star-title { font-size: 10px; }
 }
 
-h1 {
-    margin: 0 0 5px;
-    font-size: 28px;
-}
-
-.subtitle {
-    margin-bottom: 18px;
-    color: #666;
-    font-size: 15px;
-}
-
-
-/* =========================
-   COLORS
-========================= */
+h1 { margin: 0 0 5px; font-size: 28px; }
+.subtitle { margin-bottom: 18px; color: #666; font-size: 15px; }
 
 .colors {
     display: flex;
@@ -120,31 +71,13 @@ h1 {
 
 .color-button.selected {
     border-color: #222;
-    box-shadow:
-        0 0 0 2px white,
-        0 0 0 4px #222;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #222;
 }
 
-.green {
-    background: #cfe6d0;
-}
-
-.blue {
-    background: #cbdcf2;
-}
-
-.yellow {
-    background: #f5e9ad;
-}
-
-.orange {
-    background: #f5d1b0;
-}
-
-
-/* =========================
-   TOOLS
-========================= */
+.green { background: #cfe6d0; }
+.blue { background: #cbdcf2; }
+.yellow { background: #f5e9ad; }
+.orange { background: #f5d1b0; }
 
 .tools {
     display: flex;
@@ -161,7 +94,6 @@ h1 {
     border-radius: 7px;
     cursor: pointer;
     font-size: 20px;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -170,15 +102,8 @@ h1 {
 .tool-button.selected {
     border-color: #222;
     background: #f1f1f1;
-
-    box-shadow:
-        inset 0 0 0 2px #222;
+    box-shadow: inset 0 0 0 2px #222;
 }
-
-
-/* =========================
-   BOARD
-========================= */
 
 .board-wrapper {
     position: relative;
@@ -188,152 +113,77 @@ h1 {
 
 .board {
     position: relative;
-
     display: grid;
-
-    grid-template-columns:
-        repeat(
-            4,
-            clamp(
-                64px,
-                18vw,
-                112px
-            )
-        );
-
-    grid-template-rows:
-        repeat(
-            4,
-            clamp(
-                64px,
-                18vw,
-                112px
-            )
-        );
-
+    grid-template-columns: repeat(4, clamp(64px, 18vw, 112px));
+    grid-template-rows: repeat(4, clamp(64px, 18vw, 112px));
     gap: 4px;
 }
-
-
-/* =========================
-   CELLS
-========================= */
 
 .cell {
     position: relative;
     z-index: 1;
-
     background: #fafafa;
-
     border: 1px solid #ddd;
     border-radius: 8px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     cursor: pointer;
-
     overflow: visible;
 }
 
-.cell:hover {
-    border-color: #aaa;
-}
-
-
-/* =========================
-   CHESS PIECES
-========================= */
+.cell:hover { border-color: #aaa; }
 
 .piece {
     width: 62%;
     height: 62%;
-
     object-fit: contain;
-
     pointer-events: none;
-
     position: relative;
     z-index: 2;
 }
 
-
-/* =========================
-   MARKERS
-========================= */
-
 .markers {
     position: absolute;
-
     top: 5px;
     left: 5px;
-
     display: flex;
     gap: 3px;
-
     pointer-events: none;
-
     z-index: 5;
 }
 
 .marker {
     width: 13px;
     height: 13px;
-
     border-radius: 50%;
-
     border: 2px solid currentColor;
 }
 
-.marker.filled {
-    background: currentColor;
-}
-
-
-/* =========================
-   CROSS
-========================= */
+.marker.filled { background: currentColor; }
 
 .marker.cross {
     width: 16px;
     height: 16px;
-
     border: none;
     border-radius: 0;
-
     position: relative;
 }
 
 .marker.cross::before,
 .marker.cross::after {
     content: "";
-
     position: absolute;
-
     left: 7px;
     top: 0;
-
     width: 3px;
     height: 18px;
-
     background: currentColor;
-
     border-radius: 2px;
 }
 
-.marker.cross::before {
-    transform: rotate(45deg);
-}
-
-.marker.cross::after {
-    transform: rotate(-45deg);
-}
-
-
-/* =========================
-   SPECIAL SLASH
-========================= */
+.marker.cross::before { transform: rotate(45deg); }
+.marker.cross::after { transform: rotate(-45deg); }
 
 .corner-slash {
     position: absolute;
@@ -350,77 +200,43 @@ h1 {
     border-radius: 2px;
 }
 
-.corner-slash.white-slash {
-    background: #aaa;
-}
-
-
-/* =========================
-   ARROWS
-========================= */
+.corner-slash.white-slash { background: #aaa; }
 
 .arrow-layer {
     position: absolute;
-
     inset: 0;
-
     width: 100%;
     height: 100%;
-
     pointer-events: none;
-
     overflow: visible;
-
     z-index: 20;
 }
 
 .arrow {
     fill: none;
-
     stroke-width: 3;
-
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-
-/* =========================
-   BOTTOM BUTTONS
-========================= */
-
 .bottom-buttons {
     display: flex;
     justify-content: center;
-
     gap: 8px;
-
     margin-top: 18px;
-
     flex-wrap: wrap;
 }
 
 .bottom-button {
     padding: 8px 15px;
-
     border: 1px solid #ccc;
-
     background: white;
-
     border-radius: 7px;
-
     cursor: pointer;
-
     font-size: 14px;
 }
 
-.bottom-button:hover {
-    background: #f3f3f3;
-}
-
-
-/* =========================
-   SUBMIT
-========================= */
+.bottom-button:hover { background: #f3f3f3; }
 
 .submit-button {
     padding: 8px 18px;
@@ -432,14 +248,8 @@ h1 {
     font-size: 14px;
 }
 
-.submit-button:hover {
-    background: #444;
-}
-
-.submit-button:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
+.submit-button:hover { background: #444; }
+.submit-button:disabled { opacity: .5; cursor: default; }
 
 .result-message {
     min-height: 20px;
@@ -453,673 +263,368 @@ h1 {
     cursor: default;
 }
 
-.board.locked .cell:hover {
-    border-color: #ddd;
-}
+.board.locked .cell:hover { border-color: #ddd; }
 
 .board.locked::after {
-  content: "✓";
-  position: absolute;
-  top: -13px;
-  right: -13px;
-  z-index: 40;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #222;
-  background: #c9b89b;
-  border: 2px solid #222;
-  font-size: 23px;
-  font-weight: bold;
-  line-height: 1;
-  box-shadow: 0 2px 5px rgba(0,0,0,.18);
-  animation: checkmark-pop .42s cubic-bezier(.2,1.6,.4,1) both;
-  pointer-events: none;
+    content: "✓";
+    position: absolute;
+    top: -13px;
+    right: -13px;
+    z-index: 40;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #222;
+    background: #c9b89b;
+    border: 2px solid #222;
+    font-size: 23px;
+    font-weight: bold;
+    line-height: 1;
+    box-shadow: 0 2px 5px rgba(0,0,0,.18);
+    animation: checkmark-pop .42s cubic-bezier(.2,1.6,.4,1) both;
+    pointer-events: none;
 }
+
 @keyframes checkmark-pop {
-  0% { transform: scale(0) rotate(-25deg); opacity: 0; }
-  75% { transform: scale(1.15) rotate(5deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0); opacity: 1; }
+    0% { transform: scale(0) rotate(-25deg); opacity: 0; }
+    75% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
 }
+
 .star-fly {
-  position: fixed; z-index: 9999; pointer-events: none;
-  font-size: 27px; line-height: 1;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,.2));
-  will-change: transform, opacity;
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    font-size: 27px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.2));
+    will-change: transform, opacity;
 }
+
 .total-stars-pop { animation: total-stars-pop .45s ease-out; }
+
 @keyframes total-stars-pop {
-  0% { transform: scale(1); }
-  45% { transform: scale(1.35); color: #a87813; }
-  100% { transform: scale(1); }
+    0% { transform: scale(1); }
+    45% { transform: scale(1.35); color: #a87813; }
+    100% { transform: scale(1); }
 }
+
 @media (prefers-reduced-motion: reduce) {
-  .board.locked::after, .total-stars-pop { animation: none; }
+    .board.locked::after, .total-stars-pop { animation: none; }
 }
-
-
-
-/* =========================
-   END MESSAGE
-========================= */
 
 .end-message {
     display: none;
-
     margin-top: 18px;
-
     font-size: 15px;
-
     color: #666;
 }
-
 </style>
 </head>
 
-
 <body>
 
-<!-- =====================
-     STAR HUD
-====================== -->
-
 <div class="star-hud">
-
     <div class="star-box">
         <div class="star-title">Level</div>
         <div class="star-value" id="levelStars">⭐ 1 ster</div>
     </div>
-
     <div class="star-box total">
         <div class="star-title">Total</div>
         <div class="star-value" id="totalStars">⭐ 0 sterren</div>
     </div>
-
 </div>
-
 
 <h1>Forked Up</h1>
-
-<div class="subtitle">
-    Create groups of four!
-</div>
-
-
-<!-- =====================
-     COLORS
-====================== -->
+<div class="subtitle">Create groups of four!</div>
 
 <div class="colors">
-
-    <button
-        class="color-button green selected"
-        data-color="green">
-    </button>
-
-    <button
-        class="color-button blue"
-        data-color="blue">
-    </button>
-
-    <button
-        class="color-button yellow"
-        data-color="yellow">
-    </button>
-
-    <button
-        class="color-button orange"
-        data-color="orange">
-    </button>
-
+    <button class="color-button green selected" data-color="green"></button>
+    <button class="color-button blue" data-color="blue"></button>
+    <button class="color-button yellow" data-color="yellow"></button>
+    <button class="color-button orange" data-color="orange"></button>
 </div>
-
-
-<!-- =====================
-     TOOLS
-====================== -->
 
 <div class="tools">
-
-    <button
-        class="tool-button selected"
-        data-tool="filled"
-        title="Filled square">
-        ■
-    </button>
-
-    <button
-        class="tool-button"
-        data-tool="open"
-        title="Open circle">
-        ○
-    </button>
-
-    <button
-        class="tool-button"
-        data-tool="closed"
-        title="Closed circle">
-        ●
-    </button>
-
-    <button
-        class="tool-button"
-        data-tool="cross"
-        title="Cross">
-        ×
-    </button>
-
+    <button class="tool-button selected" data-tool="filled" title="Filled square">■</button>
+    <button class="tool-button" data-tool="open" title="Open circle">○</button>
+    <button class="tool-button" data-tool="closed" title="Closed circle">●</button>
+    <button class="tool-button" data-tool="cross" title="Cross">×</button>
 </div>
-
-
-<!-- =====================
-     BOARD
-====================== -->
 
 <div class="board-wrapper">
-
-    <div
-        class="board"
-        id="board">
-
-        <svg
-            id="arrowLayer"
-            class="arrow-layer"
-            xmlns="http://www.w3.org/2000/svg">
-        </svg>
-
+    <div class="board" id="board">
+        <svg id="arrowLayer" class="arrow-layer" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
-
 </div>
-
-
-<!-- =====================
-     NAVIGATION
-====================== -->
 
 <div class="bottom-buttons">
-
-    <button
-        class="bottom-button"
-        id="previousPuzzle">
-
-        ← Previous
-
-    </button>
-
-
-    <button
-        class="bottom-button"
-        id="reset">
-
-        Reset
-
-    </button>
-
-
-    <button
-        class="bottom-button"
-        id="nextPuzzle">
-
-        Next puzzle →
-
-    </button>
-
+    <button class="bottom-button" id="previousPuzzle">← Previous</button>
+    <button class="bottom-button" id="reset">Reset</button>
+    <button class="bottom-button" id="nextPuzzle">Next puzzle →</button>
 </div>
-
 
 <div class="bottom-buttons">
-
-    <button
-        class="submit-button"
-        id="submitPuzzle">
-
-        Submit
-
-    </button>
-
+    <button class="submit-button" id="submitPuzzle">Submit</button>
 </div>
 
-
-<div
-    class="result-message"
-    id="resultMessage">
-</div>
-
-
-<div
-    class="end-message"
-    id="endMessage">
-
-    You've reached the end.
-
-</div>
-
-
+<div class="result-message" id="resultMessage"></div>
+<div class="end-message" id="endMessage">You've reached the end.</div>
 
 <script>
-
-
-/* =====================================================
-   PUZZLES
-===================================================== */
-
+/* PUZZLES */
 const puzzles = [
-
-    [
-        "A", "B", "C", "C",
-
-        "D", "C", "D", "B",
-
-        "B", "A", "A", "A",
-
-        "D", "D", "C", "B"
-    ],
-
-
-    [
-        "B", "C", "A", "C",
-
-        "D", "B", "A", "A",
-
-        "C", "A", "D", "C",
-
-        "B", "A", "C", "C"
-    ],
-
-
-    [
-        "A", "A", "C", "C",
-
-        "C", "C", "D", "B",
-
-        "B", "C", "D", "C",
-
-        "A", "A", "B", "C"
-    ],
-
-
-    [
-        "C", "C", "C", "B",
-
-        "A", "C", "C", "B",
-
-        "C", "C", "C", "C",
-
-        "D", "D", "D", "D"
-    ],
-
-
-    [
-        "B", "C", "C", "C",
-
-        "A", "D", "A", "C",
-
-        "C", "B", "D", "A",
-
-        "A", "D", "C", "C"
-    ]
-
+    ["A","B","C","C","D","C","D","B","B","A","A","A","D","D","C","B"],
+    ["B","C","A","C","D","B","A","A","C","A","D","C","B","A","C","C"],
+    ["A","A","C","C","C","C","D","B","B","C","D","C","A","A","B","C"],
+    ["C","C","C","B","A","C","C","B","C","C","C","C","D","D","D","D"],
+    ["B","C","C","C","A","D","A","C","C","B","D","A","A","D","C","C"]
 ];
-
-
-let currentPuzzle = 0;
-
-
-/* =====================================================
-   STARS
-===================================================== */
-
-const puzzleStars = [
-    1,  // Puzzle 1
-    4,  // Puzzle 2
-    3,  // Puzzle 3
-    2,  // Puzzle 4
-    3   // Puzzle 5
-];
-
-const levelStarsElement =
-    document.getElementById("levelStars");
-
-const totalStarsElement =
-    document.getElementById("totalStars");
-
-function getTotalStars() {
-
-    return puzzleStars.reduce(
-        (total, stars, index) => {
-
-            const puzzle =
-                progress.puzzles[String(index)];
-
-            return total +
-                (puzzle && puzzle.completed
-                    ? stars
-                    : 0);
-
-        },
-        0
-    );
-
-}
-
-function updateStarDisplay() {
-
-    if (!levelStarsElement || !totalStarsElement) {
-        return;
-    }
-
-    const stars =
-        puzzleStars[currentPuzzle];
-
-    levelStarsElement.textContent =
-        `⭐ ${stars} ${stars === 1 ? "ster" : "sterren"}`;
-
-    const total =
-        getTotalStars();
-
-    totalStarsElement.textContent =
-        `⭐ ${total} ${total === 1 ? "ster" : "sterren"}`;
-
-}
-
-function animateStarUnlock(previousTotal, newTotal, starsEarned) {
-  const totalEl = totalStarsElement;
-  if (!board || !totalEl || starsEarned <= 0) return;
-  const boardRect = board.getBoundingClientRect();
-  const targetRect = totalEl.getBoundingClientRect();
-  const startX = boardRect.left + boardRect.width / 2;
-  const startY = boardRect.top + boardRect.height / 2;
-  const endX = targetRect.left + targetRect.width / 2;
-  const endY = targetRect.top + targetRect.height / 2;
-  const label = n => `⭐ ${n} ${n === 1 ? "ster" : "sterren"}`;
-  totalEl.textContent = label(previousTotal);
-  totalEl.classList.remove('total-stars-pop');
-
-  for (let i = 0; i < starsEarned; i++) {
-    const star = document.createElement('span');
-    star.className = 'star-fly';
-    star.textContent = '⭐';
-    const offset = (i - (starsEarned - 1) / 2) * 13;
-    star.style.left = `${startX - 13 + offset}px`;
-    star.style.top = `${startY - 13}px`;
-    document.body.appendChild(star);
-    if (typeof star.animate === 'function') {
-      const dx = endX - (startX + offset);
-      const dy = endY - startY;
-      const anim = star.animate([
-        { transform: 'translate(0,0) scale(1)', opacity: 1 },
-        { transform: `translate(${dx * .55}px,${dy * .55 - 35}px) scale(1.15)`, opacity: 1, offset: .65 },
-        { transform: `translate(${dx}px,${dy}px) scale(.25)`, opacity: 0 }
-      ], { duration: 850, delay: i * 110, easing: 'cubic-bezier(.22,.75,.25,1)', fill: 'forwards' });
-      anim.onfinish = () => star.remove();
-    } else {
-      window.setTimeout(() => star.remove(), 1000 + i * 110);
-    }
-  }
-  const duration = 900 + Math.max(0, starsEarned - 1) * 110;
-  const started = performance.now();
-  function countUp(now) {
-    const progress = Math.min(1, (now - started) / duration);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    totalEl.textContent = label(Math.round(previousTotal + (newTotal - previousTotal) * eased));
-    if (progress < 1) requestAnimationFrame(countUp);
-    else {
-      totalEl.textContent = label(newTotal);
-      totalEl.classList.remove('total-stars-pop');
-      void totalEl.offsetWidth;
-      totalEl.classList.add('total-stars-pop');
-      window.setTimeout(() => totalEl.classList.remove('total-stars-pop'), 500);
-    }
-  }
-  requestAnimationFrame(countUp);
-}
-
-
-
-/* =====================================================
-   ANSWERS
-===================================================== */
 
 const answers = [
-
-    [
-        "A", "B", "C", "A",
-
-        "B", "B", "A", "D",
-
-        "C", "D", "D", "B",
-
-        "D", "C", "C", "A"
-    ],
-
-
-    [
-        "A", "B", "B", "B",
-
-        "B", "C", "A", "D",
-
-        "C", "D", "C", "C",
-
-        "D", "A", "D", "A"
-    ],
-
-
-    [
-        "A", "D", "A", "C",
-
-        "B", "B", "D", "D",
-
-        "A", "A", "B", "C",
-
-        "B", "D", "C", "C"
-    ],
-
-
-    [
-        "A", "B", "C", "B",
-
-        "A", "C", "C", "C",
-
-        "A", "B", "D", "D",
-
-        "B", "A", "D", "D"
-    ],
-
-
-    [
-        "A", "B", "B", "B",
-
-        "C", "A", "D", "C",
-
-        "D", "D", "C", "B",
-
-        "A", "C", "D", "A"
-    ]
-
+    ["A","B","C","A","B","B","A","D","C","D","D","B","D","C","C","A"],
+    ["A","B","B","B","B","C","A","D","C","D","C","C","D","A","D","A"],
+    ["A","D","A","C","B","B","D","D","A","A","B","C","B","D","C","C"],
+    ["A","B","C","B","A","C","C","C","A","B","D","D","B","A","D","D"],
+    ["A","B","B","B","C","A","D","C","D","D","C","B","A","C","D","A"]
 ];
 
-
-/* =====================================================
-   LOCAL STORAGE
-===================================================== */
-
+const puzzleStars = [1, 3, 3, 2, 3];
 const STORAGE_KEY = "forkedUpProgress_v1";
 
+let currentPuzzle = 0;
 let puzzleCompleted = false;
+let progress;
 
 function getDefaultProgress() {
-
-    return {
-        currentPuzzle: 0,
-        puzzles: {}
-    };
-
+    return { currentPuzzle: 0, puzzles: {} };
 }
 
 function loadProgress() {
-
     try {
-
-        const saved =
-            localStorage.getItem(STORAGE_KEY);
-
-        if (!saved) {
-            return getDefaultProgress();
-        }
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return getDefaultProgress();
 
         const parsed = JSON.parse(saved);
-
-        if (!parsed || typeof parsed !== "object") {
-            return getDefaultProgress();
-        }
+        if (!parsed || typeof parsed !== "object") return getDefaultProgress();
 
         if (!parsed.puzzles || typeof parsed.puzzles !== "object") {
             parsed.puzzles = {};
         }
 
         if (
-            typeof parsed.currentPuzzle !== "number"
-            ||
-            parsed.currentPuzzle < 0
-            ||
+            typeof parsed.currentPuzzle !== "number" ||
+            parsed.currentPuzzle < 0 ||
             parsed.currentPuzzle >= puzzles.length
         ) {
             parsed.currentPuzzle = 0;
         }
 
         return parsed;
-
-    }
-
-    catch (error) {
-
-        console.warn(
-            "Could not load Forked Up progress.",
-            error
-        );
-
+    } catch (error) {
+        console.warn("Could not load Forked Up progress.", error);
         return getDefaultProgress();
-
     }
-
 }
 
-let progress = loadProgress();
-
+progress = loadProgress();
 currentPuzzle = progress.currentPuzzle;
 
 function saveProgress() {
-
     try {
-
         progress.currentPuzzle = currentPuzzle;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    } catch (error) {
+        console.warn("Could not save Forked Up progress.", error);
+    }
+}
 
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(progress)
-        );
+const levelStarsElement = document.getElementById("levelStars");
+const totalStarsElement = document.getElementById("totalStars");
+const board = document.getElementById("board");
+const arrowLayer = document.getElementById("arrowLayer");
+const endMessage = document.getElementById("endMessage");
+const submitPuzzleButton = document.getElementById("submitPuzzle");
+const resultMessage = document.getElementById("resultMessage");
 
+const pieces = {
+    A: "https://lichess1.org/assets/piece/rhosgfx/wN.svg",
+    B: "https://lichess1.org/assets/piece/rhosgfx/wB.svg",
+    C: "https://lichess1.org/assets/piece/rhosgfx/wR.svg",
+    D: "https://lichess1.org/assets/piece/rhosgfx/wP.svg"
+};
+
+const colors = {
+    green: { fill: "#cfe6d0", line: "#70ad72" },
+    blue: { fill: "#cbdcf2", line: "#6f9edb" },
+    yellow: { fill: "#f5e9ad", line: "#d0ae28" },
+    orange: { fill: "#f5d1b0", line: "#e89a55" }
+};
+
+let selectedColor = "green";
+let selectedTool = "filled";
+let arrows = [];
+let dragging = false;
+let dragStart = null;
+let dragCurrent = null;
+
+function getTotalStars() {
+    return puzzleStars.reduce((total, stars, index) => {
+        const puzzle = progress.puzzles[String(index)];
+        return total + (puzzle && puzzle.completed ? stars : 0);
+    }, 0);
+}
+
+function updateStarDisplay() {
+    const stars = puzzleStars[currentPuzzle];
+    levelStarsElement.textContent =
+        `⭐ ${stars} ${stars === 1 ? "ster" : "sterren"}`;
+
+    const total = getTotalStars();
+    totalStarsElement.textContent =
+        `⭐ ${total} ${total === 1 ? "ster" : "sterren"}`;
+}
+
+function animateStarUnlock(previousTotal, newTotal, starsEarned) {
+    const totalEl = totalStarsElement;
+    if (!board || !totalEl || starsEarned <= 0) return;
+
+    const boardRect = board.getBoundingClientRect();
+    const targetRect = totalEl.getBoundingClientRect();
+    const startX = boardRect.left + boardRect.width / 2;
+    const startY = boardRect.top + boardRect.height / 2;
+    const endX = targetRect.left + targetRect.width / 2;
+    const endY = targetRect.top + targetRect.height / 2;
+    const label = n => `⭐ ${n} ${n === 1 ? "ster" : "sterren"}`;
+
+    totalEl.textContent = label(previousTotal);
+    totalEl.classList.remove("total-stars-pop");
+
+    for (let i = 0; i < starsEarned; i++) {
+        const star = document.createElement("span");
+        star.className = "star-fly";
+        star.textContent = "⭐";
+
+        const offset = (i - (starsEarned - 1) / 2) * 13;
+        star.style.left = `${startX - 13 + offset}px`;
+        star.style.top = `${startY - 13}px`;
+        document.body.appendChild(star);
+
+        if (typeof star.animate === "function") {
+            const dx = endX - (startX + offset);
+            const dy = endY - startY;
+
+            const anim = star.animate([
+                { transform: "translate(0,0) scale(1)", opacity: 1 },
+                {
+                    transform: `translate(${dx * .55}px,${dy * .55 - 35}px) scale(1.15)`,
+                    opacity: 1,
+                    offset: .65
+                },
+                {
+                    transform: `translate(${dx}px,${dy}px) scale(.25)`,
+                    opacity: 0
+                }
+            ], {
+                duration: 850,
+                delay: i * 110,
+                easing: "cubic-bezier(.22,.75,.25,1)",
+                fill: "forwards"
+            });
+
+            anim.onfinish = () => star.remove();
+        } else {
+            window.setTimeout(() => star.remove(), 1000 + i * 110);
+        }
     }
 
-    catch (error) {
+    const duration = 900 + Math.max(0, starsEarned - 1) * 110;
+    const started = performance.now();
 
-        console.warn(
-            "Could not save Forked Up progress.",
-            error
+    function countUp(now) {
+        const amount = Math.min(1, (now - started) / duration);
+        const eased = 1 - Math.pow(1 - amount, 3);
+
+        totalEl.textContent = label(
+            Math.round(previousTotal + (newTotal - previousTotal) * eased)
         );
 
+        if (amount < 1) {
+            requestAnimationFrame(countUp);
+        } else {
+            totalEl.textContent = label(newTotal);
+            totalEl.classList.remove("total-stars-pop");
+            void totalEl.offsetWidth;
+            totalEl.classList.add("total-stars-pop");
+            window.setTimeout(
+                () => totalEl.classList.remove("total-stars-pop"),
+                500
+            );
+        }
     }
 
+    requestAnimationFrame(countUp);
+}
+
+function getCells() {
+    return document.querySelectorAll(".cell");
+}
+
+function getMarkerType(marker) {
+    if (marker.classList.contains("cross")) return "cross";
+    if (marker.classList.contains("filled")) return "closed";
+    return "open";
 }
 
 function getPuzzleProgress() {
-
-    const saved =
-        progress.puzzles[String(currentPuzzle)];
+    const saved = progress.puzzles[String(currentPuzzle)];
 
     if (!saved || typeof saved !== "object") {
-
         return {
             fills: Array(16).fill(null),
-            markers: Array.from(
-                { length: 16 },
-                () => []
-            ),
+            markers: Array.from({ length: 16 }, () => []),
             arrows: [],
             completed: false
         };
-
     }
 
     return {
-        fills:
-            Array.isArray(saved.fills)
-                ? saved.fills
-                : Array(16).fill(null),
-
-        markers:
-            Array.isArray(saved.markers)
-                ? saved.markers
-                : Array.from(
-                    { length: 16 },
-                    () => []
-                ),
-
-        arrows:
-            Array.isArray(saved.arrows)
-                ? saved.arrows
-                : [],
-
-        completed:
-            saved.completed === true
+        fills: Array.isArray(saved.fills) ? saved.fills : Array(16).fill(null),
+        markers: Array.isArray(saved.markers)
+            ? saved.markers
+            : Array.from({ length: 16 }, () => []),
+        arrows: Array.isArray(saved.arrows) ? saved.arrows : [],
+        completed: saved.completed === true
     };
-
 }
 
 function saveCurrentPuzzle() {
-
     if (puzzleCompleted) {
-
         progress.puzzles[String(currentPuzzle)] = {
             fills: Array(16).fill(null),
-            markers: Array.from(
-                { length: 16 },
-                () => []
-            ),
+            markers: Array.from({ length: 16 }, () => []),
             arrows: [],
             completed: true
         };
-
         saveProgress();
         return;
-
     }
 
     const cells = getCells();
 
-    const fills =
-        [...cells].map(
-            cell => cell.dataset.fillColor || null
-        );
+    const fills = [...cells].map(cell => cell.dataset.fillColor || null);
 
-    const markers =
-        [...cells].map(
-            cell => {
+    const markers = [...cells].map(cell => {
+        const markerContainer = cell.querySelector(".markers");
 
-                const markerContainer =
-                    cell.querySelector(".markers");
-
-                return [...markerContainer.children]
-                    .map(marker => ({
-                        type: getMarkerType(marker),
-                        color: marker.dataset.color || null
-                    }));
-
-            }
-        );
+        return [...markerContainer.children].map(marker => ({
+            type: getMarkerType(marker),
+            color: marker.dataset.color || null
+        }));
+    });
 
     progress.puzzles[String(currentPuzzle)] = {
         fills,
@@ -1129,1475 +634,429 @@ function saveCurrentPuzzle() {
     };
 
     saveProgress();
-
-}
-
-function getMarkerType(marker) {
-
-    if (marker.classList.contains("cross")) {
-        return "cross";
-    }
-
-    if (marker.classList.contains("filled")) {
-        return "closed";
-    }
-
-    return "open";
-
 }
 
 function applySavedPuzzleState() {
-
     const saved = getPuzzleProgress();
-
     const cells = getCells();
 
     puzzleCompleted = saved.completed;
-
     arrows = Array.isArray(saved.arrows)
         ? saved.arrows.map(arrow => ({ ...arrow }))
         : [];
 
-    cells.forEach(
-        (cell, index) => {
+    cells.forEach((cell, index) => {
+        const fillColor = saved.fills[index] || null;
+        cell.dataset.fillColor = fillColor || "";
 
-            const fillColor =
-                saved.fills[index] || null;
+        cell.style.background =
+            fillColor && colors[fillColor]
+                ? colors[fillColor].fill
+                : "#fafafa";
 
-            cell.dataset.fillColor =
-                fillColor || "";
+        const markers = cell.querySelector(".markers");
+        markers.innerHTML = "";
 
-            cell.style.background =
-                fillColor && colors[fillColor]
-                    ? colors[fillColor].fill
-                    : "#fafafa";
+        const savedMarkers = Array.isArray(saved.markers[index])
+            ? saved.markers[index]
+            : [];
 
-            const markers =
-                cell.querySelector(".markers");
+        savedMarkers.forEach(savedMarker => {
+            if (!savedMarker || !colors[savedMarker.color]) return;
 
-            markers.innerHTML = "";
+            const marker = document.createElement("div");
+            marker.classList.add("marker");
 
-            const savedMarkers =
-                Array.isArray(saved.markers[index])
-                    ? saved.markers[index]
-                    : [];
+            if (savedMarker.type === "closed") {
+                marker.classList.add("filled");
+            }
 
-            savedMarkers.forEach(
-                savedMarker => {
+            if (savedMarker.type === "cross") {
+                marker.classList.add("cross");
+            }
 
-                    if (
-                        !savedMarker
-                        ||
-                        !colors[savedMarker.color]
-                    ) {
-                        return;
-                    }
-
-                    const marker =
-                        document.createElement("div");
-
-                    marker.classList.add("marker");
-
-                    if (savedMarker.type === "closed") {
-                        marker.classList.add("filled");
-                    }
-
-                    if (savedMarker.type === "cross") {
-                        marker.classList.add("cross");
-                    }
-
-                    marker.style.color =
-                        colors[savedMarker.color].line;
-
-                    marker.dataset.color =
-                        savedMarker.color;
-
-                    markers.appendChild(marker);
-
-                }
-            );
-
-        }
-    );
+            marker.style.color = colors[savedMarker.color].line;
+            marker.dataset.color = savedMarker.color;
+            markers.appendChild(marker);
+        });
+    });
 
     if (puzzleCompleted) {
         completePuzzle(false);
-    }
-    else {
+    } else {
         unlockPuzzle();
     }
 
     renderArrows();
-
 }
-
-
-
-/* =====================================================
-   PIECES
-===================================================== */
-
-const pieces = {
-
-    A:
-        "https://lichess1.org/assets/piece/rhosgfx/wN.svg",
-
-    B:
-        "https://lichess1.org/assets/piece/rhosgfx/wB.svg",
-
-    C:
-        "https://lichess1.org/assets/piece/rhosgfx/wR.svg",
-
-    D:
-        "https://lichess1.org/assets/piece/rhosgfx/wP.svg"
-
-};
-
-
-/* =====================================================
-   COLORS
-===================================================== */
-
-const colors = {
-
-    green: {
-        fill: "#cfe6d0",
-        line: "#70ad72"
-    },
-
-    blue: {
-        fill: "#cbdcf2",
-        line: "#6f9edb"
-    },
-
-    yellow: {
-        fill: "#f5e9ad",
-        line: "#d0ae28"
-    },
-
-    orange: {
-        fill: "#f5d1b0",
-        line: "#e89a55"
-    }
-
-};
-
-
-/* =====================================================
-   STATE
-===================================================== */
-
-let selectedColor = "green";
-
-let selectedTool = "filled";
-
-let arrows = [];
-
-let dragging = false;
-
-let dragStart = null;
-
-let dragCurrent = null;
-
-
-/* =====================================================
-   ELEMENTS
-===================================================== */
-
-const board =
-    document.getElementById("board");
-
-const arrowLayer =
-    document.getElementById("arrowLayer");
-
-const endMessage =
-    document.getElementById("endMessage");
-
-const submitPuzzleButton =
-    document.getElementById("submitPuzzle");
-
-const resultMessage =
-    document.getElementById("resultMessage");
-
-
-/* =====================================================
-   CREATE BOARD
-===================================================== */
 
 function createBoard() {
+    document.querySelectorAll(".cell").forEach(cell => cell.remove());
 
-    document
-        .querySelectorAll(".cell")
-        .forEach(
-            cell => cell.remove()
-        );
+    puzzles[currentPuzzle].forEach((pieceType, index) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.dataset.index = index;
 
+        const img = document.createElement("img");
+        img.className = "piece";
+        img.src = pieces[pieceType];
+        img.alt = pieceType;
+        cell.appendChild(img);
 
-    const puzzle =
-        puzzles[currentPuzzle];
+        const markers = document.createElement("div");
+        markers.className = "markers";
+        cell.appendChild(markers);
 
-
-    puzzle.forEach(
-        (pieceType, index) => {
-
-            const cell =
-                document.createElement("div");
-
-
-            cell.className = "cell";
-
-            cell.dataset.index = index;
-
-
-            /* PIECE */
-
-            const img =
-                document.createElement("img");
-
-
-            img.className = "piece";
-
-            img.src =
-                pieces[pieceType];
-
-            img.alt = pieceType;
-
-
-            cell.appendChild(img);
-
-
-            /* MARKERS */
-
-            const markers =
-                document.createElement("div");
-
-
-            markers.className = "markers";
-
-
-            cell.appendChild(markers);
-
-
-            /* =====================
-               SPECIAL SLASHES
-
-               Puzzle 2:
-               black: B4 (13) + C4 (14)
-               gray:  C1 (2)  + B3 (9)
-            ===================== */
-
-            if (
-                currentPuzzle === 1
-                &&
-                (index === 13 || index === 14)
-            ) {
-                const slash = document.createElement("div");
-                slash.className = "corner-slash";
-                cell.appendChild(slash);
-            }
-
-            if (
-                currentPuzzle === 1
-                &&
-                (index === 2 || index === 9)
-            ) {
-                const slash = document.createElement("div");
-                slash.className = "corner-slash white-slash";
-                cell.appendChild(slash);
-            }
-
-
-            board.appendChild(cell);
-
+        if (currentPuzzle === 1 && (index === 13 || index === 14)) {
+            const slash = document.createElement("div");
+            slash.className = "corner-slash";
+            cell.appendChild(slash);
         }
-    );
 
+        if (currentPuzzle === 1 && (index === 2 || index === 9)) {
+            const slash = document.createElement("div");
+            slash.className = "corner-slash white-slash";
+            cell.appendChild(slash);
+        }
+
+        board.appendChild(cell);
+    });
 
     setupCellEvents();
-
 }
-
-
-/* =====================================================
-   GET CELLS
-===================================================== */
-
-function getCells() {
-
-    return document.querySelectorAll(".cell");
-
-}
-
-
-/* =====================================================
-   CELL EVENTS
-===================================================== */
 
 function setupCellEvents() {
+    getCells().forEach(cell => {
+        cell.addEventListener("click", () => {
+            if (puzzleCompleted) return;
 
-    const cells = getCells();
+            if (cell.dataset.skipClick === "true") {
+                cell.dataset.skipClick = "false";
+                return;
+            }
 
+            const color = colors[selectedColor];
 
-    cells.forEach(
-        cell => {
+            if (selectedTool === "filled") {
+                if (currentPuzzle === 1) {
+                    const cellIndex = Number(cell.dataset.index);
+                    const restrictedPairs = [
+                        [13, 14, "B4 and C4 cannot be the same color."],
+                        [2, 9, "C1 and B3 cannot be the same color."]
+                    ];
 
+                    for (const [a, b, message] of restrictedPairs) {
+                        if (cellIndex === a || cellIndex === b) {
+                            const otherIndex = cellIndex === a ? b : a;
+                            const otherCell = getCells()[otherIndex];
 
-            /* =====================
-               CLICK
-            ===================== */
-
-            cell.addEventListener(
-                "click",
-                () => {
-
-                    if (puzzleCompleted) {
-                        return;
-                    }
-
-
-                    if (
-                        cell.dataset.skipClick ===
-                        "true"
-                    ) {
-
-                        cell.dataset.skipClick =
-                            "false";
-
-                        return;
-
-                    }
-
-
-                    const color =
-                        colors[selectedColor];
-
-
-                    /* FILLED CELL */
-
-                    if (
-                        selectedTool === "filled"
-                    ) {
-
-                        /* Puzzle 2 slash rules */
-                        if (currentPuzzle === 1) {
-                            const cellIndex = Number(cell.dataset.index);
-                            const restrictedPairs = [
-                                [13, 14, "B4 and C4 cannot be the same color."],
-                                [2, 9, "C1 and B3 cannot be the same color."]
-                            ];
-
-                            for (const [a, b, message] of restrictedPairs) {
-                                if (cellIndex === a || cellIndex === b) {
-                                    const otherIndex = cellIndex === a ? b : a;
-                                    const otherCell = getCells()[otherIndex];
-
-                                    if (
-                                        cell.dataset.fillColor !== selectedColor
-                                        &&
-                                        otherCell.dataset.fillColor === selectedColor
-                                    ) {
-                                        resultMessage.textContent = message;
-                                        return;
-                                    }
-                                }
+                            if (
+                                cell.dataset.fillColor !== selectedColor &&
+                                otherCell.dataset.fillColor === selectedColor
+                            ) {
+                                resultMessage.textContent = message;
+                                return;
                             }
                         }
-
-                        if (
-                            cell.dataset.fillColor
-                            ===
-                            selectedColor
-                        ) {
-
-                            cell.style.background =
-                                "#fafafa";
-
-                            cell.dataset.fillColor = "";
-
-                        }
-
-                        else {
-
-                            cell.style.background =
-                                color.fill;
-
-                            cell.dataset.fillColor =
-                                selectedColor;
-
-                        }
-
-                        saveCurrentPuzzle();
-
-                        return;
-
                     }
-
-
-                    /* MARKERS */
-
-                    const markers =
-                        cell.querySelector(
-                            ".markers"
-                        );
-
-
-                    const marker =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    marker.classList.add(
-                        "marker"
-                    );
-
-
-                    marker.style.color =
-                        color.line;
-
-
-                    if (
-                        selectedTool === "open"
-                    ) {
-
-                        marker.classList.add(
-                            "open"
-                        );
-
-                    }
-
-
-                    if (
-                        selectedTool === "closed"
-                    ) {
-
-                        marker.classList.add(
-                            "filled"
-                        );
-
-                    }
-
-
-                    if (
-                        selectedTool === "cross"
-                    ) {
-
-                        marker.classList.add(
-                            "cross"
-                        );
-
-                    }
-
-
-                    /*
-                     * Same marker + same color
-                     * toggles off.
-                     */
-
-                    const existing =
-                        [
-                            ...markers.children
-                        ].find(
-                            existingMarker => {
-
-                                return (
-
-                                    existingMarker.className
-                                    ===
-                                    marker.className
-
-                                    &&
-
-                                    existingMarker.style.color
-                                    ===
-                                    marker.style.color
-
-                                );
-
-                            }
-                        );
-
-
-                    if (existing) {
-
-                        existing.remove();
-
-                    }
-
-                    else {
-
-                        marker.dataset.color =
-                            selectedColor;
-
-                        markers.appendChild(
-                            marker
-                        );
-
-                    }
-
-                    saveCurrentPuzzle();
-
                 }
-            );
 
-
-            /* =====================
-               START ARROW
-            ===================== */
-
-            cell.addEventListener(
-                "mousedown",
-                event => {
-
-                    if (puzzleCompleted) {
-                        return;
-                    }
-
-                    if (
-                        event.button !== 0
-                    ) {
-
-                        return;
-
-                    }
-
-
-                    dragging = true;
-
-                    dragStart =
-                        Number(
-                            cell.dataset.index
-                        );
-
-                    dragCurrent =
-                        dragStart;
-
-
-                    drawTemporaryArrow();
-
+                if (cell.dataset.fillColor === selectedColor) {
+                    cell.style.background = "#fafafa";
+                    cell.dataset.fillColor = "";
+                } else {
+                    cell.style.background = color.fill;
+                    cell.dataset.fillColor = selectedColor;
                 }
-            );
 
-        }
-    );
-
-}
-
-
-/* =====================================================
-   COLOR BUTTONS
-===================================================== */
-
-document
-    .querySelectorAll(".color-button")
-    .forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    if (puzzleCompleted) {
-                        return;
-                    }
-
-                    selectedColor =
-                        button.dataset.color;
-
-
-                    document
-                        .querySelectorAll(
-                            ".color-button"
-                        )
-                        .forEach(
-                            b =>
-                                b.classList.remove(
-                                    "selected"
-                                )
-                        );
-
-
-                    button.classList.add(
-                        "selected"
-                    );
-
-                }
-            );
-
-        }
-    );
-
-
-/* =====================================================
-   TOOL BUTTONS
-===================================================== */
-
-document
-    .querySelectorAll(".tool-button")
-    .forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    if (puzzleCompleted) {
-                        return;
-                    }
-
-                    selectedTool =
-                        button.dataset.tool;
-
-
-                    document
-                        .querySelectorAll(
-                            ".tool-button"
-                        )
-                        .forEach(
-                            b =>
-                                b.classList.remove(
-                                    "selected"
-                                )
-                        );
-
-
-                    button.classList.add(
-                        "selected"
-                    );
-
-                }
-            );
-
-        }
-    );
-
-
-/* =====================================================
-   MOUSE MOVE
-===================================================== */
-
-document.addEventListener(
-    "mousemove",
-    event => {
-
-        if (puzzleCompleted || !dragging) {
-            return;
-        }
-
-
-        const target =
-            document.elementFromPoint(
-                event.clientX,
-                event.clientY
-            );
-
-
-        if (!target) {
-            return;
-        }
-
-
-        const cell =
-            target.closest(".cell");
-
-
-        if (!cell) {
-            return;
-        }
-
-
-        dragCurrent =
-            Number(
-                cell.dataset.index
-            );
-
-
-        drawTemporaryArrow();
-
-    }
-);
-
-
-/* =====================================================
-   MOUSE UP
-===================================================== */
-
-document.addEventListener(
-    "mouseup",
-    event => {
-
-        if (!dragging) {
-            return;
-        }
-
-        if (puzzleCompleted) {
-            dragging = false;
-            return;
-        }
-
-
-        dragging = false;
-
-
-        const target =
-            document.elementFromPoint(
-                event.clientX,
-                event.clientY
-            );
-
-
-        clearTemporaryArrow();
-
-
-        if (!target) {
-            return;
-        }
-
-
-        const cell =
-            target.closest(".cell");
-
-
-        if (!cell) {
-            return;
-        }
-
-
-        const end =
-            Number(
-                cell.dataset.index
-            );
-
-
-        /*
-         * Same cell = no arrow.
-         */
-
-        if (
-            dragStart === end
-        ) {
-
-            return;
-
-        }
-
-
-        toggleArrow(
-            dragStart,
-            end
-        );
-
-
-        /*
-         * Prevent the normal click
-         * from adding a marker.
-         */
-
-        cell.dataset.skipClick =
-            "true";
-
-    }
-);
-
-
-/* =====================================================
-   TOGGLE ARROW
-=====================================================
-
-   Exact same direction + color:
-   remove that arrow.
-
-   Same direction + different color:
-   add another arrow.
-
-===================================================== */
-
-function toggleArrow(
-    from,
-    to
-) {
-
-    const existingIndex =
-        arrows.findIndex(
-            arrow =>
-
-                arrow.from === from
-
-                &&
-
-                arrow.to === to
-
-                &&
-
-                arrow.color === selectedColor
-        );
-
-
-    if (
-        existingIndex !== -1
-    ) {
-
-        arrows.splice(
-            existingIndex,
-            1
-        );
-
-    }
-
-    else {
-
-        arrows.push({
-
-            from: from,
-
-            to: to,
-
-            color: selectedColor
-
+                saveCurrentPuzzle();
+                return;
+            }
+
+            const markers = cell.querySelector(".markers");
+            const marker = document.createElement("div");
+
+            marker.classList.add("marker");
+            marker.style.color = color.line;
+            marker.dataset.color = selectedColor;
+
+            if (selectedTool === "open") marker.classList.add("open");
+            if (selectedTool === "closed") marker.classList.add("filled");
+            if (selectedTool === "cross") marker.classList.add("cross");
+
+            /*
+             * FIX:
+             * Identify markers using their semantic type and saved color,
+             * not className and computed CSS color.
+             * This makes orange open circles removable with a second click.
+             */
+            const markerType = selectedTool;
+
+            const existing = [...markers.children].find(existingMarker => {
+                return (
+                    getMarkerType(existingMarker) === markerType &&
+                    existingMarker.dataset.color === selectedColor
+                );
+            });
+
+            if (existing) {
+                existing.remove();
+            } else {
+                markers.appendChild(marker);
+            }
+
+            saveCurrentPuzzle();
         });
 
-    }
+        cell.addEventListener("mousedown", event => {
+            if (puzzleCompleted || event.button !== 0) return;
 
-
-    renderArrows();
-
-    saveCurrentPuzzle();
-
+            dragging = true;
+            dragStart = Number(cell.dataset.index);
+            dragCurrent = dragStart;
+            drawTemporaryArrow();
+        });
+    });
 }
 
+document.querySelectorAll(".color-button").forEach(button => {
+    button.addEventListener("click", () => {
+        if (puzzleCompleted) return;
 
-/* =====================================================
-   CELL CENTER
-===================================================== */
+        selectedColor = button.dataset.color;
 
-function getCellCenter(
-    index
-) {
+        document.querySelectorAll(".color-button").forEach(b => {
+            b.classList.remove("selected");
+        });
 
-    const cells =
-        getCells();
+        button.classList.add("selected");
+    });
+});
 
+document.querySelectorAll(".tool-button").forEach(button => {
+    button.addEventListener("click", () => {
+        if (puzzleCompleted) return;
 
-    const cell =
-        cells[index];
+        selectedTool = button.dataset.tool;
 
+        document.querySelectorAll(".tool-button").forEach(b => {
+            b.classList.remove("selected");
+        });
 
-    const boardRect =
-        board.getBoundingClientRect();
+        button.classList.add("selected");
+    });
+});
 
+document.addEventListener("mousemove", event => {
+    if (puzzleCompleted || !dragging) return;
 
-    const cellRect =
-        cell.getBoundingClientRect();
+    const target = document.elementFromPoint(event.clientX, event.clientY);
+    if (!target) return;
 
+    const cell = target.closest(".cell");
+    if (!cell) return;
 
-    return {
+    dragCurrent = Number(cell.dataset.index);
+    drawTemporaryArrow();
+});
 
-        x:
-            cellRect.left -
-            boardRect.left +
-            cellRect.width / 2,
-
-        y:
-            cellRect.top -
-            boardRect.top +
-            cellRect.height / 2
-
-    };
-
-}
-
-
-/* =====================================================
-   POINT ON CIRCLE
-===================================================== */
-
-function pointOnCircle(
-    center,
-    target,
-    radius
-) {
-
-    const dx =
-        target.x - center.x;
-
-
-    const dy =
-        target.y - center.y;
-
-
-    const distance =
-        Math.sqrt(
-            dx * dx +
-            dy * dy
-        );
-
-
-    if (
-        distance === 0
-    ) {
-
-        return center;
-
-    }
-
-
-    return {
-
-        x:
-            center.x +
-            (dx / distance) *
-            radius,
-
-        y:
-            center.y +
-            (dy / distance) *
-            radius
-
-    };
-
-}
-
-
-/* =====================================================
-   GET PARALLEL ARROW OFFSET
-=====================================================
-
-   Voor meerdere pijlen met dezelfde
-   richting krijgen ze verschillende
-   posities naast elkaar.
-
-   1 pijl:
-       midden
-
-   2 pijlen:
-       links + rechts
-
-   3 pijlen:
-       links + midden + rechts
-
-   4 pijlen:
-       verder uit elkaar
-
-===================================================== */
-
-function getArrowOffset(
-    arrow
-) {
-
-    const sameArrows =
-        arrows.filter(
-            other =>
-
-                other.from === arrow.from
-
-                &&
-
-                other.to === arrow.to
-        );
-
-
-    const index =
-        sameArrows.indexOf(
-            arrow
-        );
-
-
-    const count =
-        sameArrows.length;
-
-
-    if (
-        count <= 1
-    ) {
-
-        return 0;
-
-    }
-
-
-    const spacing = 9;
-
-
-    /*
-     * Zorg dat de pijlen
-     * symmetrisch rond het midden
-     * komen te staan.
-     */
-
-    return (
-        index -
-        (count - 1) / 2
-    ) * spacing;
-
-}
-
-
-/* =====================================================
-   RENDER ARROWS
-===================================================== */
-
-function renderArrows() {
-
-    arrowLayer.innerHTML = "";
-
-
-    arrows.forEach(
-        arrow => {
-
-            drawArrow(
-                arrow.from,
-                arrow.to,
-                colors[
-                    arrow.color
-                ].line,
-                getArrowOffset(
-                    arrow
-                )
-            );
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   DRAW ARROW
-===================================================== */
-
-function drawArrow(
-    fromIndex,
-    toIndex,
-    color,
-    offset = 0
-) {
-
-    const startCenter =
-        getCellCenter(
-            fromIndex
-        );
-
-
-    const endCenter =
-        getCellCenter(
-            toIndex
-        );
-
-
-    const dx =
-        endCenter.x -
-        startCenter.x;
-
-
-    const dy =
-        endCenter.y -
-        startCenter.y;
-
-
-    const distance =
-        Math.sqrt(
-            dx * dx +
-            dy * dy
-        );
-
-
-    if (
-        distance === 0
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-     * Eenheidvector in de richting
-     * van start naar eind.
-     */
-
-    const ux =
-        dx / distance;
-
-
-    const uy =
-        dy / distance;
-
-
-    /*
-     * Zijwaartse vector.
-     *
-     * Hiermee schuiven we
-     * parallelle pijlen uit elkaar.
-     */
-
-    const px =
-        -uy;
-
-
-    const py =
-        ux;
-
-
-    /*
-     * Offset toepassen op beide punten.
-     */
-
-    const shiftedStart = {
-
-        x:
-            startCenter.x +
-            px * offset,
-
-        y:
-            startCenter.y +
-            py * offset
-
-    };
-
-
-    const shiftedEnd = {
-
-        x:
-            endCenter.x +
-            px * offset,
-
-        y:
-            endCenter.y +
-            py * offset
-
-    };
-
-
-    /*
-     * Pijl begint/eindigt op
-     * een denkbeeldige cirkel rond
-     * het midden van het vakje.
-     */
-
-    const radius = 23;
-
-
-    const start =
-        pointOnCircle(
-            shiftedStart,
-            shiftedEnd,
-            radius
-        );
-
-
-    const end =
-        pointOnCircle(
-            shiftedEnd,
-            shiftedStart,
-            radius
-        );
-
-
-    const arrowDX =
-        end.x -
-        start.x;
-
-
-    const arrowDY =
-        end.y -
-        start.y;
-
-
-    const arrowLength =
-        Math.sqrt(
-            arrowDX * arrowDX +
-            arrowDY * arrowDY
-        );
-
-
-    if (
-        arrowLength === 0
-    ) {
-
-        return;
-
-    }
-
-
-    const arrowUX =
-        arrowDX /
-        arrowLength;
-
-
-    const arrowUY =
-        arrowDY /
-        arrowLength;
-
-
-    /* =====================
-       ARROW HEAD
-    ===================== */
-
-    const headLength = 9;
-
-    const headWidth = 5;
-
-
-    const lineEnd = {
-
-        x:
-            end.x -
-            arrowUX *
-            headLength,
-
-        y:
-            end.y -
-            arrowUY *
-            headLength
-
-    };
-
-
-    const left = {
-
-        x:
-            lineEnd.x -
-            arrowUX *
-            headWidth -
-            arrowUY *
-            headWidth,
-
-        y:
-            lineEnd.y -
-            arrowUY *
-            headWidth +
-            arrowUX *
-            headWidth
-
-    };
-
-
-    const right = {
-
-        x:
-            lineEnd.x -
-            arrowUX *
-            headWidth +
-            arrowUY *
-            headWidth,
-
-        y:
-            lineEnd.y -
-            arrowUY *
-            headWidth -
-            arrowUX *
-            headWidth
-
-    };
-
-
-    /* =====================
-       LINE
-    ===================== */
-
-    const line =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "line"
-        );
-
-
-    line.setAttribute(
-        "x1",
-        start.x
-    );
-
-    line.setAttribute(
-        "y1",
-        start.y
-    );
-
-    line.setAttribute(
-        "x2",
-        lineEnd.x
-    );
-
-    line.setAttribute(
-        "y2",
-        lineEnd.y
-    );
-
-    line.setAttribute(
-        "stroke",
-        color
-    );
-
-    line.classList.add(
-        "arrow"
-    );
-
-
-    /* =====================
-       ARROW HEAD
-    ===================== */
-
-    const polygon =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "polygon"
-        );
-
-
-    polygon.setAttribute(
-        "points",
-        `
-        ${end.x},${end.y}
-        ${left.x},${left.y}
-        ${right.x},${right.y}
-        `
-    );
-
-
-    polygon.setAttribute(
-        "fill",
-        color
-    );
-
-
-    arrowLayer.appendChild(
-        line
-    );
-
-
-    arrowLayer.appendChild(
-        polygon
-    );
-
-}
-
-
-/* =====================================================
-   TEMPORARY ARROW
-===================================================== */
-
-function drawTemporaryArrow() {
-
-    clearTemporaryArrow();
-
-
-    if (
-        dragStart === null
-
-        ||
-
-        dragCurrent === null
-
-        ||
-
-        dragStart === dragCurrent
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-     * Tijdens slepen tonen we een
-     * tijdelijke pijl.
-     */
-
-    drawArrow(
-        dragStart,
-        dragCurrent,
-        colors[
-            selectedColor
-        ].line
-    );
-
-}
-
-
-function clearTemporaryArrow() {
-
-    renderArrows();
-
-}
-
-
-/* =====================================================
-   RESET
-===================================================== */
-
-document
-    .getElementById("reset")
-    .addEventListener(
-        "click",
-        () => {
-
-            resetPuzzle();
-
-        }
-    );
-
-
-function resetPuzzle() {
+document.addEventListener("mouseup", event => {
+    if (!dragging) return;
 
     if (puzzleCompleted) {
+        dragging = false;
         return;
     }
 
-    const cells =
-        getCells();
+    dragging = false;
 
+    const target = document.elementFromPoint(event.clientX, event.clientY);
+    clearTemporaryArrow();
+    if (!target) return;
 
-    /* Clear fills */
+    const cell = target.closest(".cell");
+    if (!cell) return;
 
-    cells.forEach(
-        cell => {
+    const end = Number(cell.dataset.index);
+    if (dragStart === end) return;
 
-            cell.style.background =
-                "#fafafa";
+    toggleArrow(dragStart, end);
+    cell.dataset.skipClick = "true";
+});
 
-            cell.dataset.fillColor = "";
-
-        }
+function toggleArrow(from, to) {
+    const existingIndex = arrows.findIndex(arrow =>
+        arrow.from === from &&
+        arrow.to === to &&
+        arrow.color === selectedColor
     );
 
-
-    /* Clear markers */
-
-    cells.forEach(
-        cell => {
-
-            const markers =
-                cell.querySelector(
-                    ".markers"
-                );
-
-
-            markers.innerHTML = "";
-
-        }
-    );
-
-
-    /* Clear arrows */
-
-    arrows = [];
-
-
-    resultMessage.textContent = "";
+    if (existingIndex !== -1) {
+        arrows.splice(existingIndex, 1);
+    } else {
+        arrows.push({ from, to, color: selectedColor });
+    }
 
     renderArrows();
-
     saveCurrentPuzzle();
-
 }
 
+function getCellCenter(index) {
+    const cells = getCells();
+    const cell = cells[index];
+    const boardRect = board.getBoundingClientRect();
+    const cellRect = cell.getBoundingClientRect();
 
+    return {
+        x: cellRect.left - boardRect.left + cellRect.width / 2,
+        y: cellRect.top - boardRect.top + cellRect.height / 2
+    };
+}
 
-/* =====================================================
-   PREPARE PUZZLE
-===================================================== */
+function pointOnCircle(center, target, radius) {
+    const dx = target.x - center.x;
+    const dy = target.y - center.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance === 0) return center;
+
+    return {
+        x: center.x + (dx / distance) * radius,
+        y: center.y + (dy / distance) * radius
+    };
+}
+
+function getArrowOffset(arrow) {
+    const sameArrows = arrows.filter(other =>
+        other.from === arrow.from && other.to === arrow.to
+    );
+
+    const index = sameArrows.indexOf(arrow);
+    const count = sameArrows.length;
+
+    if (count <= 1) return 0;
+
+    return (index - (count - 1) / 2) * 9;
+}
+
+function renderArrows() {
+    arrowLayer.innerHTML = "";
+
+    arrows.forEach(arrow => {
+        drawArrow(
+            arrow.from,
+            arrow.to,
+            colors[arrow.color].line,
+            getArrowOffset(arrow)
+        );
+    });
+}
+
+function drawArrow(fromIndex, toIndex, color, offset = 0) {
+    const startCenter = getCellCenter(fromIndex);
+    const endCenter = getCellCenter(toIndex);
+
+    const dx = endCenter.x - startCenter.x;
+    const dy = endCenter.y - startCenter.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance === 0) return;
+
+    const ux = dx / distance;
+    const uy = dy / distance;
+    const px = -uy;
+    const py = ux;
+
+    const shiftedStart = {
+        x: startCenter.x + px * offset,
+        y: startCenter.y + py * offset
+    };
+
+    const shiftedEnd = {
+        x: endCenter.x + px * offset,
+        y: endCenter.y + py * offset
+    };
+
+    const radius = 23;
+    const start = pointOnCircle(shiftedStart, shiftedEnd, radius);
+    const end = pointOnCircle(shiftedEnd, shiftedStart, radius);
+
+    const arrowDX = end.x - start.x;
+    const arrowDY = end.y - start.y;
+    const arrowLength = Math.sqrt(arrowDX * arrowDX + arrowDY * arrowDY);
+
+    if (arrowLength === 0) return;
+
+    const arrowUX = arrowDX / arrowLength;
+    const arrowUY = arrowDY / arrowLength;
+
+    const headLength = 9;
+    const headWidth = 5;
+
+    const lineEnd = {
+        x: end.x - arrowUX * headLength,
+        y: end.y - arrowUY * headLength
+    };
+
+    const left = {
+        x: lineEnd.x - arrowUX * headWidth - arrowUY * headWidth,
+        y: lineEnd.y - arrowUY * headWidth + arrowUX * headWidth
+    };
+
+    const right = {
+        x: lineEnd.x - arrowUX * headWidth + arrowUY * headWidth,
+        y: lineEnd.y - arrowUY * headWidth - arrowUX * headWidth
+    };
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", start.x);
+    line.setAttribute("y1", start.y);
+    line.setAttribute("x2", lineEnd.x);
+    line.setAttribute("y2", lineEnd.y);
+    line.setAttribute("stroke", color);
+    line.classList.add("arrow");
+
+    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    polygon.setAttribute("points", `${end.x},${end.y} ${left.x},${left.y} ${right.x},${right.y}`);
+    polygon.setAttribute("fill", color);
+
+    arrowLayer.appendChild(line);
+    arrowLayer.appendChild(polygon);
+}
+
+function drawTemporaryArrow() {
+    clearTemporaryArrow();
+
+    if (dragStart === null || dragCurrent === null || dragStart === dragCurrent) {
+        return;
+    }
+
+    drawArrow(dragStart, dragCurrent, colors[selectedColor].line);
+}
+
+function clearTemporaryArrow() {
+    renderArrows();
+}
+
+document.getElementById("reset").addEventListener("click", resetPuzzle);
+
+function resetPuzzle() {
+    if (puzzleCompleted) return;
+
+    getCells().forEach(cell => {
+        cell.style.background = "#fafafa";
+        cell.dataset.fillColor = "";
+        cell.querySelector(".markers").innerHTML = "";
+    });
+
+    arrows = [];
+    resultMessage.textContent = "";
+    renderArrows();
+    saveCurrentPuzzle();
+}
 
 function prepareNewPuzzle() {
-
     updateStarDisplay();
 
     dragging = false;
@@ -2606,83 +1065,45 @@ function prepareNewPuzzle() {
 
     endMessage.style.display = "none";
     resultMessage.textContent = "";
-
     selectedColor = "green";
     selectedTool = "filled";
 
-    document
-        .querySelectorAll(".color-button")
-        .forEach(button => {
-            button.classList.toggle(
-                "selected",
-                button.dataset.color === "green"
-            );
-        });
+    document.querySelectorAll(".color-button").forEach(button => {
+        button.classList.toggle("selected", button.dataset.color === "green");
+    });
 
-    document
-        .querySelectorAll(".tool-button")
-        .forEach(button => {
-            button.classList.toggle(
-                "selected",
-                button.dataset.tool === "filled"
-            );
-        });
+    document.querySelectorAll(".tool-button").forEach(button => {
+        button.classList.toggle("selected", button.dataset.tool === "filled");
+    });
 
     arrows = [];
-
     createBoard();
     applySavedPuzzleState();
-
 }
 
-
-/* =====================================================
-   SUBMIT / ANSWER CHECKING
-===================================================== */
-
 function allCellsColored() {
-
-    return [...getCells()]
-        .every(cell => Boolean(cell.dataset.fillColor));
-
+    return [...getCells()].every(cell => Boolean(cell.dataset.fillColor));
 }
 
 function getCellColor(cell) {
-
     return cell.dataset.fillColor || null;
-
 }
 
 function arraysEqual(a, b) {
-
-    if (a.length !== b.length) {
-        return false;
-    }
-
-    return a.every(
-        (value, index) => value === b[index]
-    );
-
+    if (a.length !== b.length) return false;
+    return a.every((value, index) => value === b[index]);
 }
 
 function checkAnswer() {
-
-    if (puzzleCompleted) {
-        return;
-    }
+    if (puzzleCompleted) return;
 
     if (!allCellsColored()) {
-
-        resultMessage.textContent =
-            "Color all 16 squares before submitting.";
-
+        resultMessage.textContent = "Color all 16 squares before submitting.";
         return;
-
     }
 
     const cells = [...getCells()];
 
-    /* Puzzle 2 slash rules */
     if (currentPuzzle === 1) {
         const restrictedPairs = [
             [13, 14, "B4 and C4 cannot be the same color."],
@@ -2697,27 +1118,14 @@ function checkAnswer() {
         }
     }
 
-    const playerColors = [
-        "green",
-        "blue",
-        "yellow",
-        "orange"
-    ];
-
+    const playerColors = ["green", "blue", "yellow", "orange"];
     const usedAnswerGroups = new Set();
-
     let correct = true;
 
     for (const color of playerColors) {
-
-        const playerCells =
-            cells
-                .map((cell, index) =>
-                    getCellColor(cell) === color
-                        ? index
-                        : -1
-                )
-                .filter(index => index !== -1);
+        const playerCells = cells
+            .map((cell, index) => getCellColor(cell) === color ? index : -1)
+            .filter(index => index !== -1);
 
         if (playerCells.length !== 4) {
             correct = false;
@@ -2727,25 +1135,18 @@ function checkAnswer() {
         let matchingGroup = -1;
 
         for (let group = 0; group < 4; group++) {
+            if (usedAnswerGroups.has(group)) continue;
 
-            if (usedAnswerGroups.has(group)) {
-                continue;
-            }
-
-            const answerCells =
-                answers[currentPuzzle]
-                    .map((letter, index) =>
-                        letter === String.fromCharCode(65 + group)
-                            ? index
-                            : -1
-                    )
-                    .filter(index => index !== -1);
+            const answerCells = answers[currentPuzzle]
+                .map((letter, index) =>
+                    letter === String.fromCharCode(65 + group) ? index : -1
+                )
+                .filter(index => index !== -1);
 
             if (arraysEqual(playerCells, answerCells)) {
                 matchingGroup = group;
                 break;
             }
-
         }
 
         if (matchingGroup === -1) {
@@ -2754,25 +1155,18 @@ function checkAnswer() {
         }
 
         usedAnswerGroups.add(matchingGroup);
-
     }
 
     if (correct) {
         completePuzzle(true);
-    }
-    else {
+    } else {
         showIncorrect();
     }
-
 }
 
 function showIncorrect() {
-
-    resultMessage.textContent =
-        "Not quite — try again!";
-
+    resultMessage.textContent = "Not quite — try again!";
     saveCurrentPuzzle();
-
 }
 
 function completePuzzle(save = true) {
@@ -2780,7 +1174,6 @@ function completePuzzle(save = true) {
     const starsEarned = puzzleStars[currentPuzzle] || 0;
 
     puzzleCompleted = true;
-
     dragging = false;
     dragStart = null;
     dragCurrent = null;
@@ -2788,40 +1181,25 @@ function completePuzzle(save = true) {
     arrows = [];
     renderArrows();
 
-    getCells().forEach(
-        cell => {
-
-            const markers =
-                cell.querySelector(".markers");
-
-            markers.innerHTML = "";
-
-            cell.style.background = "#e8dcc5";
-            cell.dataset.fillColor = "";
-
-        }
-    );
+    getCells().forEach(cell => {
+        cell.querySelector(".markers").innerHTML = "";
+        cell.style.background = "#e8dcc5";
+        cell.dataset.fillColor = "";
+    });
 
     board.classList.add("locked");
 
-    document
-        .querySelectorAll(".color-button, .tool-button")
-        .forEach(button => {
-            button.disabled = true;
-        });
+    document.querySelectorAll(".color-button, .tool-button").forEach(button => {
+        button.disabled = true;
+    });
 
     submitPuzzleButton.disabled = true;
-
-    resultMessage.textContent =
-        "Puzzle complete! 🎉";
+    resultMessage.textContent = "Puzzle complete! 🎉";
 
     if (save) {
         progress.puzzles[String(currentPuzzle)] = {
             fills: Array(16).fill(null),
-            markers: Array.from(
-                { length: 16 },
-                () => []
-            ),
+            markers: Array.from({ length: 16 }, () => []),
             arrows: [],
             completed: true
         };
@@ -2830,124 +1208,57 @@ function completePuzzle(save = true) {
     }
 
     updateStarDisplay();
-    if (save) animateStarUnlock(previousTotal, getTotalStars(), starsEarned);
 
+    if (save) {
+        animateStarUnlock(previousTotal, getTotalStars(), starsEarned);
+    }
 }
 
 function unlockPuzzle() {
-
     puzzleCompleted = false;
-
     board.classList.remove("locked");
 
-    document
-        .querySelectorAll(".color-button, .tool-button")
-        .forEach(button => {
-            button.disabled = false;
-        });
+    document.querySelectorAll(".color-button, .tool-button").forEach(button => {
+        button.disabled = false;
+    });
 
     submitPuzzleButton.disabled = false;
-
 }
 
+document.getElementById("nextPuzzle").addEventListener("click", () => {
+    if (currentPuzzle < puzzles.length - 1) {
+        saveCurrentPuzzle();
 
-/* =====================================================
-   NEXT PUZZLE
-===================================================== */
+        currentPuzzle++;
+        progress.currentPuzzle = currentPuzzle;
+        saveProgress();
 
-document
-    .getElementById("nextPuzzle")
-    .addEventListener(
-        "click",
-        () => {
+        prepareNewPuzzle();
+    } else {
+        endMessage.style.display = "block";
+        progress.currentPuzzle = currentPuzzle;
+        saveProgress();
+    }
+});
 
-            if (
-                currentPuzzle
-                <
-                puzzles.length - 1
-            ) {
+document.getElementById("previousPuzzle").addEventListener("click", () => {
+    if (currentPuzzle === 0) return;
 
-                saveCurrentPuzzle();
+    saveCurrentPuzzle();
 
-                currentPuzzle++;
+    currentPuzzle--;
+    progress.currentPuzzle = currentPuzzle;
+    saveProgress();
 
-                progress.currentPuzzle =
-                    currentPuzzle;
+    prepareNewPuzzle();
+});
 
-                saveProgress();
+submitPuzzleButton.addEventListener("click", checkAnswer);
 
-                prepareNewPuzzle();
-
-            }
-
-            else {
-
-                endMessage.style.display =
-                    "block";
-
-                progress.currentPuzzle =
-                    currentPuzzle;
-
-                saveProgress();
-
-            }
-
-        }
-    );
-
-
-/* =====================================================
-   PREVIOUS PUZZLE
-===================================================== */
-
-document
-    .getElementById("previousPuzzle")
-    .addEventListener(
-        "click",
-        () => {
-
-            if (
-                currentPuzzle === 0
-            ) {
-
-                return;
-
-            }
-
-            saveCurrentPuzzle();
-
-            currentPuzzle--;
-
-            progress.currentPuzzle =
-                currentPuzzle;
-
-            saveProgress();
-
-            prepareNewPuzzle();
-
-        }
-    );
-
-
-/* =====================================================
-   SUBMIT BUTTON
-===================================================== */
-
-submitPuzzleButton.addEventListener(
-    "click",
-    checkAnswer
-);
-
-
-/* =====================================================
-   START
-===================================================== */
-
+/* START */
 createBoard();
 applySavedPuzzleState();
 updateStarDisplay();
-
 </script>
-
 </body>
 </html>
