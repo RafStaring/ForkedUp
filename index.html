@@ -32,12 +32,12 @@ body {
 
 .star-box {
     background: rgba(255,255,255,.96);
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 10px;
     padding: 7px 11px;
     font-size: 14px;
     line-height: 1.25;
-    box-shadow: 0 2px 7px rgba(0,0,0,.08);
+    box-shadow: none;
     text-align: left;
 }
 
@@ -480,12 +480,10 @@ function getTotalStars() {
 
 function updateStarDisplay() {
     const stars = puzzleStars[currentPuzzle];
-    levelStarsElement.textContent =
-        `${stars} ${stars === 1 ? "" : ""}`;
+    levelStarsElement.textContent = `🍬 ${stars}`;
 
     const total = getTotalStars();
-    totalStarsElement.textContent =
-        `${total} ${total === 1 ? "" : ""}`;
+    totalStarsElement.textContent = `🍬 ${total}`;
 }
 
 function animateStarUnlock(previousTotal, newTotal, starsEarned) {
@@ -498,26 +496,26 @@ function animateStarUnlock(previousTotal, newTotal, starsEarned) {
     const startY = boardRect.top + boardRect.height / 2;
     const endX = targetRect.left + targetRect.width / 2;
     const endY = targetRect.top + targetRect.height / 2;
-    const label = n => `${n} ${n === 1 ? "" : ""}`;
+    const label = n => `🍬 ${n}`;
 
     totalEl.textContent = label(previousTotal);
     totalEl.classList.remove("total-stars-pop");
 
     for (let i = 0; i < starsEarned; i++) {
-        const star = document.createElement("span");
-        star.className = "star-fly";
-        star.textContent = "";
+        const candy = document.createElement("span");
+        candy.className = "star-fly";
+        candy.textContent = "🍬";
 
         const offset = (i - (starsEarned - 1) / 2) * 13;
         star.style.left = `${startX - 13 + offset}px`;
         star.style.top = `${startY - 13}px`;
-        document.body.appendChild(star);
+        document.body.appendChild(candy);
 
-        if (typeof star.animate === "function") {
+        if (typeof candy.animate === "function") {
             const dx = endX - (startX + offset);
             const dy = endY - startY;
 
-            const anim = star.animate([
+            const anim = candy.animate([
                 { transform: "translate(0,0) scale(1)", opacity: 1 },
                 {
                     transform: `translate(${dx * .55}px,${dy * .55 - 35}px) scale(1.15)`,
@@ -535,9 +533,9 @@ function animateStarUnlock(previousTotal, newTotal, starsEarned) {
                 fill: "forwards"
             });
 
-            anim.onfinish = () => star.remove();
+            anim.onfinish = () => candy.remove();
         } else {
-            window.setTimeout(() => star.remove(), 1000 + i * 110);
+            window.setTimeout(() => candy.remove(), 1000 + i * 110);
         }
     }
 
