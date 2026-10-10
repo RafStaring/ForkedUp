@@ -381,7 +381,8 @@ const puzzles = [
     ["B","C","A","C","D","B","A","A","C","A","D","C","B","A","C","C"],
     ["A","A","C","C","C","C","D","B","B","C","D","C","A","A","B","C"],
     ["C","C","C","B","A","C","C","B","C","C","C","C","D","D","D","D"],
-    ["B","C","C","C","A","D","A","C","C","B","D","A","A","D","C","C"]
+    ["B","C","C","C","A","D","A","C","C","B","D","A","A","D","C","C"],
+    ["A","C","A","B","A","B","A","C","B","A","A","B","C","C","A","B"]
 ];
 
 const answers = [
@@ -389,7 +390,17 @@ const answers = [
     ["A","B","B","B","B","C","A","D","C","D","C","C","D","A","D","A"],
     ["A","D","A","C","B","B","D","D","A","A","B","C","B","D","C","C"],
     ["A","B","C","B","A","C","C","C","A","B","D","D","B","A","D","D"],
-    ["A","B","B","B","C","A","D","C","D","D","C","B","A","C","D","A"]
+    ["A","B","B","B","C","A","D","C","D","D","C","B","A","C","D","A"],
+    ["A","B","B","C","D","A","A","D","A","B","C","B","C","D","D","C"]
+];
+
+const slashes = [
+    ["","","","","","","","","","","","","","","",""],
+    ["","","B","","","","","","","B","","","","A","A",""],
+    ["","","","","","","","","","","","","","","",""],
+    ["","","","","","","","","","","","","","","",""],
+    ["","","","","","","","","","","","","","","",""],
+    ["","","","","A","","","","","","","","","","","A"]
 ];
 
 const puzzleStars = [1, 3, 3, 2, 4];
@@ -708,15 +719,15 @@ function createBoard() {
         markers.className = "markers";
         cell.appendChild(markers);
 
-        if (currentPuzzle === 1 && (index === 13 || index === 14)) {
+        const slashType = (slashes[currentPuzzle] || [])[index];
+        if (slashType) {
             const slash = document.createElement("div");
             slash.className = "corner-slash";
-            cell.appendChild(slash);
-        }
 
-        if (currentPuzzle === 1 && (index === 2 || index === 9)) {
-            const slash = document.createElement("div");
-            slash.className = "corner-slash white-slash";
+            if (slashType === "B") {
+                slash.classList.add("white-slash");
+            }
+
             cell.appendChild(slash);
         }
 
@@ -739,27 +750,15 @@ function setupCellEvents() {
             const color = colors[selectedColor];
 
             if (selectedTool === "filled") {
-                if (currentPuzzle === 1) {
-                    const cellIndex = Number(cell.dataset.index);
-                    const restrictedPairs = [
-                        [13, 14, "B4 and C4 cannot be the same color."],
-                        [2, 9, "C1 and B3 cannot be the same color."]
-                    ];
+                const cellIndex = Number(cell.dataset.index);
 
-                    for (const [a, b, message] of restrictedPairs) {
-                        if (cellIndex === a || cellIndex === b) {
-                            const otherIndex = cellIndex === a ? b : a;
-                            const otherCell = getCells()[otherIndex];
-
-                            if (
-                                cell.dataset.fillColor !== selectedColor &&
-                                otherCell.dataset.fillColor === selectedColor
-                            ) {
-                                resultMessage.textContent = message;
-                                return;
-                            }
-                        }
-                    }
+                // Blokkeer direct kleuren die botsen met een slash-koppeling.
+                if (cell.dataset.fillColor !== selectedColor &&
+                    hasSlashColorConflict(cellIndex, selectedColor)) {
+                    const group = slashes[currentPuzzle][cellIndex];
+                    resultMessage.textContent =
+                        `Vakjes met slash ${group} mogen niet dezelfde kleur hebben.`;
+                    return;
                 }
 
                 if (cell.dataset.fillColor === selectedColor) {
@@ -1089,6 +1088,41 @@ function getCellColor(cell) {
     return cell.dataset.fillColor || null;
 }
 
+function hasSlashColorConflict(cellIndex, color) {
+    const levelSlashes = slashes[currentPuzzle] || [];
+    const group = levelSlashes[cellIndex];
+    if (!group) return false;
+
+    return getCells().some((cell, index) =>
+        index !== cellIndex &&
+        levelSlashes[index] === group &&
+        getCellColor(cell) === color
+    );
+}
+
+function checkSlashRules(cells) {
+    const levelSlashes = slashes[currentPuzzle] || [];
+
+    for (let i = 0; i < levelSlashes.length; i++) {
+        const group = levelSlashes[i];
+        if (!group) continue;
+
+        for (let j = i + 1; j < levelSlashes.length; j++) {
+            if (
+                levelSlashes[j] === group &&
+                getCellColor(cells[i]) &&
+                getCellColor(cells[i]) === getCellColor(cells[j])
+            ) {
+                resultMessage.textContent =
+                    `Vakjes met slash ${group} mogen niet dezelfde kleur hebben.`;
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 function arraysEqual(a, b) {
     if (a.length !== b.length) return false;
     return a.every((value, index) => value === b[index]);
@@ -1104,18 +1138,9 @@ function checkAnswer() {
 
     const cells = [...getCells()];
 
-    if (currentPuzzle === 1) {
-        const restrictedPairs = [
-            [13, 14, "B4 and C4 cannot be the same color."],
-            [2, 9, "C1 and B3 cannot be the same color."]
-        ];
-
-        for (const [a, b, message] of restrictedPairs) {
-            if (getCellColor(cells[a]) === getCellColor(cells[b])) {
-                resultMessage.textContent = message;
-                return;
-            }
-        }
+    // Controleer alle slash-koppelingen voordat het antwoord wordt nagekeken.
+    if (!checkSlashRules(cells)) {
+        return;
     }
 
     const playerColors = ["green", "blue", "yellow", "orange"];
