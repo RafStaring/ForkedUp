@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -342,10 +343,10 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 <div class="subtitle">Create groups of four!</div>
 
 <div class="colors">
-    <button class="color-button green selected" data-color="green"></button>
-    <button class="color-button blue" data-color="blue"></button>
-    <button class="color-button yellow" data-color="yellow"></button>
-    <button class="color-button orange" data-color="orange"></button>
+    <button class="color-button green selected" data-color="green" aria-label="Green"></button>
+    <button class="color-button blue" data-color="blue" aria-label="Blue"></button>
+    <button class="color-button yellow" data-color="yellow" aria-label="Yellow"></button>
+    <button class="color-button orange" data-color="orange" aria-label="Orange"></button>
 </div>
 
 <div class="tools">
@@ -357,7 +358,8 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 
 <div class="board-wrapper">
     <div class="board" id="board">
-        <svg id="arrowLayer" class="arrow-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+        <svg id="arrowLayer" class="arrow-layer"
+             xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
 </div>
 
@@ -376,6 +378,7 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 
 <script>
 /* PUZZLES */
+
 const puzzles = [
     ["A","B","C","C","D","C","D","B","B","A","A","A","D","D","C","B"],
     ["B","C","A","C","D","B","A","A","C","A","D","C","B","A","C","C"],
@@ -394,6 +397,14 @@ const answers = [
     ["A","B","B","C","D","A","A","D","A","B","C","B","C","D","D","C"]
 ];
 
+/*
+Slashconfiguratie:
+A = zwarte slash
+B = grijze slash
+
+Vakjes met dezelfde letter mogen niet dezelfde kleur hebben.
+De indexen beginnen bij 0, van links naar rechts en van boven naar beneden.
+*/
 const slashes = [
     ["","","","","","","","","","","","","","","",""],
     ["","","B","","","","","","","B","","","","A","A",""],
@@ -403,7 +414,9 @@ const slashes = [
     ["","","","","A","","","","","","","","","","","A"]
 ];
 
-const puzzleStars = [1, 3, 3, 2, 4];
+// Level 6 is 3 sterren waard.
+const puzzleStars = [1, 3, 3, 2, 4, 3];
+
 const STORAGE_KEY = "forkedUpProgress_v1";
 
 let currentPuzzle = 0;
@@ -482,6 +495,8 @@ let dragging = false;
 let dragStart = null;
 let dragCurrent = null;
 
+/* STARS AND PROGRESS */
+
 function getTotalStars() {
     return puzzleStars.reduce((total, stars, index) => {
         const puzzle = progress.puzzles[String(index)];
@@ -490,13 +505,10 @@ function getTotalStars() {
 }
 
 function updateStarDisplay() {
-    const stars = puzzleStars[currentPuzzle];
-    levelStarsElement.textContent =
-        `⭐ ${stars} ${stars === 1 ? "" : ""}`;
+    const stars = puzzleStars[currentPuzzle] ?? 0;
+    levelStarsElement.textContent = `⭐ ${stars}`;
 
-    const total = getTotalStars();
-    totalStarsElement.textContent =
-        `🍬 ${total} ${total === 1 ? "" : ""}`;
+    totalStarsElement.textContent = `🍬 ${getTotalStars()}`;
 }
 
 function animateStarUnlock(previousTotal, newTotal, starsEarned) {
@@ -505,12 +517,13 @@ function animateStarUnlock(previousTotal, newTotal, starsEarned) {
 
     const boardRect = board.getBoundingClientRect();
     const targetRect = totalEl.getBoundingClientRect();
+
     const startX = boardRect.left + boardRect.width / 2;
     const startY = boardRect.top + boardRect.height / 2;
     const endX = targetRect.left + targetRect.width / 2;
     const endY = targetRect.top + targetRect.height / 2;
-    const label = n => `🍬 ${n} ${n === 1 ? "" : ""}`;
 
+    const label = n => `🍬 ${n}`;
     totalEl.textContent = label(previousTotal);
     totalEl.classList.remove("total-stars-pop");
 
@@ -570,6 +583,7 @@ function animateStarUnlock(previousTotal, newTotal, starsEarned) {
             totalEl.classList.remove("total-stars-pop");
             void totalEl.offsetWidth;
             totalEl.classList.add("total-stars-pop");
+
             window.setTimeout(
                 () => totalEl.classList.remove("total-stars-pop"),
                 500
@@ -624,11 +638,10 @@ function saveCurrentPuzzle() {
         return;
     }
 
-    const cells = getCells();
+    const cells = [...getCells()];
+    const fills = cells.map(cell => cell.dataset.fillColor || null);
 
-    const fills = [...cells].map(cell => cell.dataset.fillColor || null);
-
-    const markers = [...cells].map(cell => {
+    const markers = cells.map(cell => {
         const markerContainer = cell.querySelector(".markers");
 
         return [...markerContainer.children].map(marker => ({
@@ -701,6 +714,69 @@ function applySavedPuzzleState() {
     renderArrows();
 }
 
+/* SLASH RULES
+   The same letter in a level's slash array links those cells.
+   Cells in the same group may not have the same fill color.
+*/
+
+function getSlashType(index) {
+    const levelSlashes = slashes[currentPuzzle] || [];
+    return levelSlashes[index] || null;
+}
+
+function getSlashGroup(index) {
+    const group = getSlashType(index);
+    if (!group) return [];
+
+    const levelSlashes = slashes[currentPuzzle] || [];
+
+    return levelSlashes
+        .map((slash, cellIndex) => slash === group ? cellIndex : -1)
+        .filter(cellIndex => cellIndex !== -1);
+}
+
+function getCellColor(cell) {
+    return cell.dataset.fillColor || null;
+}
+
+function hasSlashColorConflict(cellIndex, color) {
+    const group = getSlashGroup(cellIndex);
+    if (group.length === 0) return false;
+
+    const cells = [...getCells()];
+
+    return group.some(otherIndex => {
+        if (otherIndex === cellIndex) return false;
+        return getCellColor(cells[otherIndex]) === color;
+    });
+}
+
+function checkSlashRules(cells) {
+    const levelSlashes = slashes[currentPuzzle] || [];
+
+    for (let i = 0; i < levelSlashes.length; i++) {
+        const group = levelSlashes[i];
+        if (!group) continue;
+
+        for (let j = i + 1; j < levelSlashes.length; j++) {
+            if (levelSlashes[j] !== group) continue;
+
+            const colorA = getCellColor(cells[i]);
+            const colorB = getCellColor(cells[j]);
+
+            if (colorA && colorB && colorA === colorB) {
+                resultMessage.textContent =
+                    ``;
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/* BOARD */
+
 function createBoard() {
     document.querySelectorAll(".cell").forEach(cell => cell.remove());
 
@@ -719,7 +795,9 @@ function createBoard() {
         markers.className = "markers";
         cell.appendChild(markers);
 
-        const slashType = (slashes[currentPuzzle] || [])[index];
+        // Draw each slash using the same configuration as the rule checks.
+        const slashType = getSlashType(index);
+
         if (slashType) {
             const slash = document.createElement("div");
             slash.className = "corner-slash";
@@ -752,10 +830,12 @@ function setupCellEvents() {
             if (selectedTool === "filled") {
                 const cellIndex = Number(cell.dataset.index);
 
-                // Blokkeer direct kleuren die botsen met een slash-koppeling.
-                if (cell.dataset.fillColor !== selectedColor &&
-                    hasSlashColorConflict(cellIndex, selectedColor)) {
-                    const group = slashes[currentPuzzle][cellIndex];
+                // Prevent filling a linked cell with the same color.
+                if (
+                    cell.dataset.fillColor !== selectedColor &&
+                    hasSlashColorConflict(cellIndex, selectedColor)
+                ) {
+                    const group = getSlashType(cellIndex);
                     resultMessage.textContent =
                         `Vakjes met slash ${group} mogen niet dezelfde kleur hebben.`;
                     return;
@@ -769,6 +849,7 @@ function setupCellEvents() {
                     cell.dataset.fillColor = selectedColor;
                 }
 
+                resultMessage.textContent = "";
                 saveCurrentPuzzle();
                 return;
             }
@@ -784,12 +865,6 @@ function setupCellEvents() {
             if (selectedTool === "closed") marker.classList.add("filled");
             if (selectedTool === "cross") marker.classList.add("cross");
 
-            /*
-             * FIX:
-             * Identify markers using their semantic type and saved color,
-             * not className and computed CSS color.
-             * This makes orange open circles removable with a second click.
-             */
             const markerType = selectedTool;
 
             const existing = [...markers.children].find(existingMarker => {
@@ -819,6 +894,8 @@ function setupCellEvents() {
     });
 }
 
+/* COLOR AND TOOL SELECTION */
+
 document.querySelectorAll(".color-button").forEach(button => {
     button.addEventListener("click", () => {
         if (puzzleCompleted) return;
@@ -847,6 +924,8 @@ document.querySelectorAll(".tool-button").forEach(button => {
     });
 });
 
+/* ARROWS */
+
 document.addEventListener("mousemove", event => {
     if (puzzleCompleted || !dragging) return;
 
@@ -872,6 +951,7 @@ document.addEventListener("mouseup", event => {
 
     const target = document.elementFromPoint(event.clientX, event.clientY);
     clearTemporaryArrow();
+
     if (!target) return;
 
     const cell = target.closest(".cell");
@@ -904,6 +984,9 @@ function toggleArrow(from, to) {
 function getCellCenter(index) {
     const cells = getCells();
     const cell = cells[index];
+
+    if (!cell) return { x: 0, y: 0 };
+
     const boardRect = board.getBoundingClientRect();
     const cellRect = cell.getBoundingClientRect();
 
@@ -935,7 +1018,6 @@ function getArrowOffset(arrow) {
     const count = sameArrows.length;
 
     if (count <= 1) return 0;
-
     return (index - (count - 1) / 2) * 9;
 }
 
@@ -943,6 +1025,8 @@ function renderArrows() {
     arrowLayer.innerHTML = "";
 
     arrows.forEach(arrow => {
+        if (!colors[arrow.color]) return;
+
         drawArrow(
             arrow.from,
             arrow.to,
@@ -1008,7 +1092,10 @@ function drawArrow(fromIndex, toIndex, color, offset = 0) {
         y: lineEnd.y - arrowUY * headWidth - arrowUX * headWidth
     };
 
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    const line = document.createElementNS(
+        "http://www.w3.org/2000/svg", "line"
+    );
+
     line.setAttribute("x1", start.x);
     line.setAttribute("y1", start.y);
     line.setAttribute("x2", lineEnd.x);
@@ -1016,8 +1103,14 @@ function drawArrow(fromIndex, toIndex, color, offset = 0) {
     line.setAttribute("stroke", color);
     line.classList.add("arrow");
 
-    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    polygon.setAttribute("points", `${end.x},${end.y} ${left.x},${left.y} ${right.x},${right.y}`);
+    const polygon = document.createElementNS(
+        "http://www.w3.org/2000/svg", "polygon"
+    );
+
+    polygon.setAttribute(
+        "points",
+        `${end.x},${end.y} ${left.x},${left.y} ${right.x},${right.y}`
+    );
     polygon.setAttribute("fill", color);
 
     arrowLayer.appendChild(line);
@@ -1027,7 +1120,11 @@ function drawArrow(fromIndex, toIndex, color, offset = 0) {
 function drawTemporaryArrow() {
     clearTemporaryArrow();
 
-    if (dragStart === null || dragCurrent === null || dragStart === dragCurrent) {
+    if (
+        dragStart === null ||
+        dragCurrent === null ||
+        dragStart === dragCurrent
+    ) {
         return;
     }
 
@@ -1037,6 +1134,8 @@ function drawTemporaryArrow() {
 function clearTemporaryArrow() {
     renderArrows();
 }
+
+/* RESET AND NAVIGATION */
 
 document.getElementById("reset").addEventListener("click", resetPuzzle);
 
@@ -1064,6 +1163,7 @@ function prepareNewPuzzle() {
 
     endMessage.style.display = "none";
     resultMessage.textContent = "";
+
     selectedColor = "green";
     selectedTool = "filled";
 
@@ -1080,47 +1180,10 @@ function prepareNewPuzzle() {
     applySavedPuzzleState();
 }
 
+/* ANSWER CHECKING */
+
 function allCellsColored() {
     return [...getCells()].every(cell => Boolean(cell.dataset.fillColor));
-}
-
-function getCellColor(cell) {
-    return cell.dataset.fillColor || null;
-}
-
-function hasSlashColorConflict(cellIndex, color) {
-    const levelSlashes = slashes[currentPuzzle] || [];
-    const group = levelSlashes[cellIndex];
-    if (!group) return false;
-
-    return getCells().some((cell, index) =>
-        index !== cellIndex &&
-        levelSlashes[index] === group &&
-        getCellColor(cell) === color
-    );
-}
-
-function checkSlashRules(cells) {
-    const levelSlashes = slashes[currentPuzzle] || [];
-
-    for (let i = 0; i < levelSlashes.length; i++) {
-        const group = levelSlashes[i];
-        if (!group) continue;
-
-        for (let j = i + 1; j < levelSlashes.length; j++) {
-            if (
-                levelSlashes[j] === group &&
-                getCellColor(cells[i]) &&
-                getCellColor(cells[i]) === getCellColor(cells[j])
-            ) {
-                resultMessage.textContent =
-                    `Vakjes met slash ${group} mogen niet dezelfde kleur hebben.`;
-                return false;
-            }
-        }
-    }
-
-    return true;
 }
 
 function arraysEqual(a, b) {
@@ -1138,10 +1201,8 @@ function checkAnswer() {
 
     const cells = [...getCells()];
 
-    // Controleer alle slash-koppelingen voordat het antwoord wordt nagekeken.
-    if (!checkSlashRules(cells)) {
-        return;
-    }
+    // Check all slash-linked cells before checking the answer groups.
+    if (!checkSlashRules(cells)) return;
 
     const playerColors = ["green", "blue", "yellow", "orange"];
     const usedAnswerGroups = new Set();
@@ -1149,7 +1210,9 @@ function checkAnswer() {
 
     for (const color of playerColors) {
         const playerCells = cells
-            .map((cell, index) => getCellColor(cell) === color ? index : -1)
+            .map((cell, index) =>
+                getCellColor(cell) === color ? index : -1
+            )
             .filter(index => index !== -1);
 
         if (playerCells.length !== 4) {
@@ -1281,9 +1344,11 @@ document.getElementById("previousPuzzle").addEventListener("click", () => {
 submitPuzzleButton.addEventListener("click", checkAnswer);
 
 /* START */
+
 createBoard();
 applySavedPuzzleState();
 updateStarDisplay();
 </script>
+
 </body>
 </html>
