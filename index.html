@@ -488,7 +488,7 @@ let puzzleCompleted = false;
 let progress;
 
 function getDefaultProgress() {
-    return { currentPuzzle: 0, puzzles: {}, spentCandies: 0, shop: { ownedThemes: [], ownedEffects: [], activeTheme: "default", activeEffect: "", customBackground: "" } };
+    return { currentPuzzle: 0, puzzles: {}, spentCandies: 0, shop: { ownedThemes: [], ownedEffects: [], activeTheme: "default", activeEffects: [], activeEffect: "", customBackground: "" } };
 }
 
 function loadProgress() {
@@ -516,7 +516,12 @@ function loadProgress() {
         parsed.shop.ownedThemes = Array.isArray(parsed.shop.ownedThemes) ? parsed.shop.ownedThemes : [];
         parsed.shop.ownedEffects = Array.isArray(parsed.shop.ownedEffects) ? parsed.shop.ownedEffects : [];
         parsed.shop.activeTheme = parsed.shop.activeTheme || "default";
-        parsed.shop.activeEffect = parsed.shop.activeEffect || "";
+        // Migrate older saves (single activeEffect) to stackable activeEffects.
+        if (!Array.isArray(parsed.shop.activeEffects)) {
+            parsed.shop.activeEffects = parsed.shop.activeEffect ? [parsed.shop.activeEffect] : [];
+        }
+        parsed.shop.activeEffects = [...new Set(parsed.shop.activeEffects.filter(id => typeof id === "string"))];
+        parsed.shop.activeEffect = parsed.shop.activeEffects[0] || ""; // legacy compatibility
         parsed.shop.customBackground = parsed.shop.customBackground || "";
         return parsed;
     } catch (error) {
@@ -1456,7 +1461,7 @@ function completePuzzle(save = true) {
 
     if (save) {
         animateStarUnlock(previousTotal, getCandyBalance(), starsEarned);
-        if (progress.shop && progress.shop.activeEffect === "confetti") {
+        if (progress.shop && (progress.shop.activeEffects || [progress.shop.activeEffect]).includes("confetti")) {
             launchConfetti();
         }
     }
@@ -1539,7 +1544,8 @@ function applyShopAppearance() {
       button.style.borderColor = button.classList.contains("selected") ? c.line : "transparent";
     }
   });
-  document.body.classList.toggle("pulse-tiles", shop.activeEffect === "pulse");
+  const activeEffects = Array.isArray(shop.activeEffects) ? shop.activeEffects : (shop.activeEffect ? [shop.activeEffect] : []);
+  document.body.classList.toggle("pulse-tiles", activeEffects.includes("pulse"));
   // Repaint annotations saved on the current board with the active theme's palette.
   getCells().forEach(cell => {
     const fill = cell.dataset.fillColor;
@@ -1561,7 +1567,8 @@ function renderShop() {
     const isTheme = shopCatalog.themes.some(theme => theme.id === item.id);
     const ownedList = isTheme ? progress.shop.ownedThemes : progress.shop.ownedEffects;
     const owned = item.id === "default" || ownedList.includes(item.id);
-    const active = isTheme ? progress.shop.activeTheme === item.id : progress.shop.activeEffect === item.id;
+    const activeEffects = Array.isArray(progress.shop.activeEffects) ? progress.shop.activeEffects : (progress.shop.activeEffect ? [progress.shop.activeEffect] : []);
+    const active = isTheme ? progress.shop.activeTheme === item.id : activeEffects.includes(item.id);
     const card = document.createElement("div");
     card.className = "shop-item";
     card.innerHTML = `<div class="shop-preview" style="background:${item.preview}"></div><h3>${item.name}</h3>`;
@@ -1572,16 +1579,23 @@ function renderShop() {
     button.disabled = (active && isTheme) || (!active && !owned && getCandyBalance() < item.price);
     button.onclick = () => {
       if (!isTheme && active) {
-        progress.shop.activeEffect = "";
+        const activeEffects = Array.isArray(progress.shop.activeEffects) ? progress.shop.activeEffects : (progress.shop.activeEffect ? [progress.shop.activeEffect] : []);
+        progress.shop.activeEffects = activeEffects.filter(id => id !== item.id);
       } else {
         if (!owned) {
           if (getCandyBalance() < item.price) return;
           progress.spentCandies = (progress.spentCandies || 0) + item.price;
           ownedList.push(item.id);
         }
-        if (isTheme) progress.shop.activeTheme = item.id;
-        else progress.shop.activeEffect = item.id;
+        if (isTheme) {
+          progress.shop.activeTheme = item.id;
+        } else {
+          const activeEffects = Array.isArray(progress.shop.activeEffects) ? progress.shop.activeEffects : (progress.shop.activeEffect ? [progress.shop.activeEffect] : []);
+          if (!activeEffects.includes(item.id)) activeEffects.push(item.id);
+          progress.shop.activeEffects = activeEffects;
+        }
       }
+      progress.shop.activeEffect = (progress.shop.activeEffects || [])[0] || ""; // legacy compatibility
       saveProgress();
       applyShopAppearance();
       renderShop();
