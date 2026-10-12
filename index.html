@@ -251,6 +251,7 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 
 .submit-button:hover { background: #444; }
 .submit-button:disabled { opacity: .5; cursor: default; }
+.max-candies{margin-top:2px;font-size:13px;color:#9d8a6a;}
 
 .result-message {
     min-height: 20px;
@@ -323,6 +324,39 @@ h1 { margin: 0 0 5px; font-size: 28px; }
     font-size: 15px;
     color: #666;
 }
+
+/* BiShop */
+#shopButton { font-weight: bold; border-color: #b88a36; background: #fff7df; }
+#shopButton:hover { background: #ffedb5; }
+.shop-overlay { position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(20,24,35,.58); }
+.shop-overlay.open { display:flex; }
+.shop-panel { width:min(720px,100%); max-height:min(86vh,800px); overflow:auto; background:#fffdf7; color:#242424; border:2px solid #e4c36f; border-radius:18px; padding:20px; box-shadow:0 18px 60px #0004; text-align:left; }
+.shop-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.shop-head h2 { margin:0; font-size:25px; }
+.shop-close { border:0; border-radius:8px; background:#eee; padding:7px 11px; cursor:pointer; font-size:18px; }
+.shop-balance { margin:10px 0 16px; padding:10px 12px; border-radius:10px; background:#fff1c9; font-weight:bold; }
+.shop-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.shop-tab { border:1px solid #ddd; border-radius:9px; padding:8px 12px; background:white; cursor:pointer; }
+.shop-tab.active { background:#292d3e; color:white; border-color:#292d3e; }
+.shop-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+.shop-item { border:1px solid #e5dfd1; background:white; border-radius:12px; padding:13px; }
+.shop-preview { height:65px; border-radius:8px; margin-bottom:10px; border:1px solid #ddd; background:repeating-linear-gradient(135deg,#f5ead5 0 8px,#fffaf0 8px 16px); }
+.shop-item h3 { margin:4px 0 5px; font-size:16px; }
+.shop-item p { margin:0 0 11px; color:#666; font-size:13px; line-height:1.4; }
+.shop-buy { width:100%; border:0; border-radius:8px; padding:9px; cursor:pointer; background:#292d3e; color:white; font-weight:bold; }
+.shop-buy:disabled { background:#d9d9d9; color:#666; cursor:default; }
+.shop-note { color:#777; font-size:12px; margin-top:12px; line-height:1.45; }
+body.theme-default { background:#fff; }
+body.theme-ocean { background:repeating-linear-gradient(135deg,#e9f9fb 0 12px,#ccecf0 12px 24px); }
+body.theme-sunset { background:repeating-linear-gradient(135deg,#fff0e5 0 12px,#fbd6c4 12px 24px); }
+body.theme-forest { background:repeating-linear-gradient(135deg,#edf5e9 0 12px,#d4e7ce 12px 24px); }
+body.theme-lavender { background:repeating-linear-gradient(135deg,#f5efff 0 12px,#e4d8fa 12px 24px); }
+body.theme-custom { background-position:center; background-size:cover; background-attachment:fixed; background-repeat:no-repeat; }
+body.theme-custom::before { content:""; position:fixed; inset:0; background:rgba(255,255,255,.42); pointer-events:none; z-index:-1; }
+body.pulse-tiles .cell:hover { animation: tile-pulse .65s ease-in-out infinite alternate; }
+@keyframes tile-pulse { from { box-shadow:0 0 0 0 rgba(100,120,180,0); } to { box-shadow:0 0 0 4px rgba(100,120,180,.35); } }
+@media(max-width:520px) { .shop-panel { padding:15px; } .shop-head h2 { font-size:21px; } }
+
 </style>
 </head>
 
@@ -336,6 +370,7 @@ h1 { margin: 0 0 5px; font-size: 28px; }
     <div class="star-box total">
         <div class="star-title">Total</div>
         <div class="star-value" id="totalStars">🍬 0</div>
+        <div class="star-value max-candies" id="maxCandies">🟤 0</div>
     </div>
 </div>
 
@@ -372,6 +407,18 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 <div class="bottom-buttons">
     <button class="submit-button" id="submitPuzzle">Submit</button>
 </div>
+<div class="bottom-buttons">
+    <button class="bottom-button" id="shopButton">♝ BiShop 🍬</button>
+</div>
+
+<div class="shop-overlay" id="shopOverlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+  <div class="shop-panel">
+    <div class="shop-head"><h2 id="shopTitle">♝ BiShop</h2><button class="shop-close" id="shopClose" aria-label="Close shop">✕</button></div>
+    <div class="shop-balance" id="shopBalance">🍬 0 snoepjes</div>
+    <div class="shop-grid" id="shopGrid"></div>
+  </div>
+</div>
+<input type="file" id="backgroundUpload" accept="image/*" hidden>
 
 <div class="result-message" id="resultMessage"></div>
 <div class="end-message" id="endMessage">You've reached the end.</div>
@@ -430,7 +477,7 @@ let puzzleCompleted = false;
 let progress;
 
 function getDefaultProgress() {
-    return { currentPuzzle: 0, puzzles: {} };
+    return { currentPuzzle: 0, puzzles: {}, spentCandies: 0, shop: { ownedThemes: [], ownedEffects: [], activeTheme: "default", activeEffect: "", customBackground: "" } };
 }
 
 function loadProgress() {
@@ -453,6 +500,13 @@ function loadProgress() {
             parsed.currentPuzzle = 0;
         }
 
+        parsed.spentCandies = Number.isFinite(parsed.spentCandies) ? Math.max(0, parsed.spentCandies) : 0;
+        parsed.shop = parsed.shop && typeof parsed.shop === "object" ? parsed.shop : {};
+        parsed.shop.ownedThemes = Array.isArray(parsed.shop.ownedThemes) ? parsed.shop.ownedThemes : [];
+        parsed.shop.ownedEffects = Array.isArray(parsed.shop.ownedEffects) ? parsed.shop.ownedEffects : [];
+        parsed.shop.activeTheme = parsed.shop.activeTheme || "default";
+        parsed.shop.activeEffect = parsed.shop.activeEffect || "";
+        parsed.shop.customBackground = parsed.shop.customBackground || "";
         return parsed;
     } catch (error) {
         console.warn("Could not load Forked Up progress.", error);
@@ -474,6 +528,7 @@ function saveProgress() {
 
 const levelStarsElement = document.getElementById("levelStars");
 const totalStarsElement = document.getElementById("totalStars");
+const maxCandiesElement = document.getElementById("maxCandies");
 const board = document.getElementById("board");
 const arrowLayer = document.getElementById("arrowLayer");
 const endMessage = document.getElementById("endMessage");
@@ -487,7 +542,7 @@ const pieces = {
     D: "https://lichess1.org/assets/piece/rhosgfx/wP.svg"
 };
 
-const colors = {
+let colors = {
     green: { fill: "#cfe6d0", line: "#70ad72" },
     blue: { fill: "#cbdcf2", line: "#6f9edb" },
     yellow: { fill: "#f5e9ad", line: "#d0ae28" },
@@ -510,11 +565,17 @@ function getTotalStars() {
     }, 0);
 }
 
+function getCandyBalance() {
+    return Math.max(0, getTotalStars() - (progress.spentCandies || 0));
+}
+
 function updateStarDisplay() {
     const stars = puzzleStars[currentPuzzle] ?? 0;
     levelStarsElement.textContent = `⭐ ${stars}`;
-
-    totalStarsElement.textContent = `🍬 ${getTotalStars()}`;
+    totalStarsElement.textContent = `🍬 ${getCandyBalance()}`;
+    maxCandiesElement.textContent = `🟤 ${getTotalStars()}`;
+    const balance = document.getElementById("shopBalance");
+    if (balance) balance.textContent = `🍬 ${getCandyBalance()} / ${getTotalStars()} snoepjes`;
 }
 
 function animateStarUnlock(previousTotal, newTotal, starsEarned) {
@@ -682,7 +743,7 @@ function applySavedPuzzleState() {
         cell.style.background =
             fillColor && colors[fillColor]
                 ? colors[fillColor].fill
-                : "#fafafa";
+                : "var(--empty-cell, #fafafa)";
 
         const markers = cell.querySelector(".markers");
         markers.innerHTML = "";
@@ -848,7 +909,7 @@ function setupCellEvents() {
                 }
 
                 if (cell.dataset.fillColor === selectedColor) {
-                    cell.style.background = "#fafafa";
+                    cell.style.background = "var(--empty-cell, #fafafa)";
                     cell.dataset.fillColor = "";
                 } else {
                     cell.style.background = color.fill;
@@ -910,9 +971,11 @@ document.querySelectorAll(".color-button").forEach(button => {
 
         document.querySelectorAll(".color-button").forEach(b => {
             b.classList.remove("selected");
+            b.style.borderColor = "transparent";
         });
 
         button.classList.add("selected");
+        button.style.borderColor = colors[selectedColor].line;
     });
 });
 
@@ -1149,7 +1212,7 @@ function resetPuzzle() {
     if (puzzleCompleted) return;
 
     getCells().forEach(cell => {
-        cell.style.background = "#fafafa";
+        cell.style.background = "var(--empty-cell, #fafafa)";
         cell.dataset.fillColor = "";
         cell.querySelector(".markers").innerHTML = "";
     });
@@ -1184,6 +1247,7 @@ function prepareNewPuzzle() {
     arrows = [];
     createBoard();
     applySavedPuzzleState();
+    applyShopAppearance();
 }
 
 /* ANSWER CHECKING */
@@ -1264,7 +1328,7 @@ function showIncorrect() {
 }
 
 function completePuzzle(save = true) {
-    const previousTotal = getTotalStars();
+    const previousTotal = getCandyBalance();
     const starsEarned = puzzleStars[currentPuzzle] || 0;
 
     puzzleCompleted = true;
@@ -1304,7 +1368,7 @@ function completePuzzle(save = true) {
     updateStarDisplay();
 
     if (save) {
-        animateStarUnlock(previousTotal, getTotalStars(), starsEarned);
+        animateStarUnlock(previousTotal, getCandyBalance(), starsEarned);
     }
 }
 
@@ -1349,10 +1413,146 @@ document.getElementById("previousPuzzle").addEventListener("click", () => {
 
 submitPuzzleButton.addEventListener("click", checkAnswer);
 
+
+/* BISSHOP: cosmetics */
+const shopCatalog = {
+  themes: [
+    { id:"default", name:"Standaard", price:0, preview:"#ffffff", palette:{green:{fill:"#bfe3c4",line:"#18743a"},blue:{fill:"#c5dcfa",line:"#245bb5"},yellow:{fill:"#f7e7a3",line:"#a57a00"},orange:{fill:"#f3c2c2",line:"#c62828"}} },
+    { id:"ocean", name:"Ocean Stripes", price:4, preview:"repeating-linear-gradient(135deg,#e9f9fb 0 10px,#bfe7ed 10px 20px)", palette:{green:{fill:"#b9e2cb",line:"#155d3a"},blue:{fill:"#b7e3f0",line:"#075c7c"},yellow:{fill:"#d9cdf6",line:"#593795"},orange:{fill:"#f5c7e0",line:"#9d2869"}} },
+    { id:"sunset", name:"Sunset Stripes", price:4, preview:"repeating-linear-gradient(135deg,#fff0e5 0 10px,#f7c7b6 10px 20px)", palette:{green:{fill:"#f5b5b0",line:"#c62828"},blue:{fill:"#bcd9f7",line:"#245bb5"},yellow:{fill:"#ffec9e",line:"#ad7b00"},orange:{fill:"#ffd0a6",line:"#d96b12"}} },
+    { id:"forest", name:"Forest Stripes", price:4, preview:"repeating-linear-gradient(135deg,#edf5e9 0 10px,#cfe2c7 10px 20px)", palette:{green:{fill:"#bfe3c4",line:"#237a3b"},blue:{fill:"#bfdcf7",line:"#2465b4"},yellow:{fill:"#d8c7f3",line:"#6639a6"},orange:{fill:"#f5c7e2",line:"#b62b79"}} },
+    { id:"lavender", name:"Lavender Stripes", price:4, preview:"repeating-linear-gradient(135deg,#f5efff 0 10px,#dfd0f7 10px 20px)", palette:{green:{fill:"#c8e8d2",line:"#276746"},blue:{fill:"#c5dafa",line:"#2856a4"},yellow:{fill:"#dfc9f4",line:"#7040a2"},orange:{fill:"#f5c9e2",line:"#a92e70"}} }
+  ],
+  effects: [
+    { id:"pulse", name:"Pulse Tiles", price:4, preview:"radial-gradient(circle,#ffffff,#dce3f5)" }
+  ]
+};
+const defaultPalette = shopCatalog.themes[0].palette;
+
+function applyShopAppearance() {
+  const shop = progress.shop;
+  document.body.classList.remove("theme-default","theme-ocean","theme-sunset","theme-forest","theme-lavender","theme-custom","pulse-tiles");
+  const theme = shop.activeTheme || "default";
+  document.body.classList.add("theme-" + (theme === "custom" ? "custom" : theme));
+  if (theme === "custom" && shop.customBackground) {
+    document.body.style.backgroundImage = `url("${shop.customBackground}")`;
+  } else {
+    document.body.style.backgroundImage = "";
+  }
+  const selected = shopCatalog.themes.find(item => item.id === theme);
+  colors = selected ? selected.palette : defaultPalette;
+  document.querySelectorAll(".color-button").forEach(button => {
+    const c = colors[button.dataset.color];
+    if (c) {
+      button.style.background = c.fill;
+      button.style.borderColor = button.classList.contains("selected") ? c.line : "transparent";
+    }
+  });
+  document.body.classList.toggle("pulse-tiles", shop.activeEffect === "pulse");
+  // Repaint annotations saved on the current board with the active theme's palette.
+  getCells().forEach(cell => {
+    const fill = cell.dataset.fillColor;
+    if (fill && colors[fill]) cell.style.background = colors[fill].fill;
+    cell.querySelectorAll(".marker").forEach(marker => {
+      const key = marker.dataset.color;
+      if (key && colors[key]) marker.style.color = colors[key].line;
+    });
+  });
+  renderArrows();
+}
+
+function renderShop() {
+  updateStarDisplay();
+  const grid = document.getElementById("shopGrid");
+  grid.innerHTML = "";
+  const items = [...shopCatalog.themes, ...shopCatalog.effects];
+  items.forEach(item => {
+    const isTheme = shopCatalog.themes.some(theme => theme.id === item.id);
+    const ownedList = isTheme ? progress.shop.ownedThemes : progress.shop.ownedEffects;
+    const owned = item.id === "default" || ownedList.includes(item.id);
+    const active = isTheme ? progress.shop.activeTheme === item.id : progress.shop.activeEffect === item.id;
+    const card = document.createElement("div");
+    card.className = "shop-item";
+    card.innerHTML = `<div class="shop-preview" style="background:${item.preview}"></div><h3>${item.name}</h3>`;
+    const button = document.createElement("button");
+    button.className = "shop-buy";
+    button.textContent = active ? (isTheme ? "Actief ✓" : "Unequip") : owned ? "Equip" : `Kopen — ${item.price} 🍬`;
+    // Effects can be toggled off again; themes stay equipped until another theme is selected.
+    button.disabled = (active && isTheme) || (!active && !owned && getCandyBalance() < item.price);
+    button.onclick = () => {
+      if (!isTheme && active) {
+        progress.shop.activeEffect = "";
+      } else {
+        if (!owned) {
+          if (getCandyBalance() < item.price) return;
+          progress.spentCandies = (progress.spentCandies || 0) + item.price;
+          ownedList.push(item.id);
+        }
+        if (isTheme) progress.shop.activeTheme = item.id;
+        else progress.shop.activeEffect = item.id;
+      }
+      saveProgress();
+      applyShopAppearance();
+      renderShop();
+    };
+    card.appendChild(button);
+    grid.appendChild(card);
+  });
+  const backgroundCard = document.createElement("div");
+  backgroundCard.className = "shop-item";
+  backgroundCard.innerHTML = `<div class="shop-preview" style="background:linear-gradient(135deg,#f7d7ec,#d4e7ff)"></div><h3>Eigen afbeelding</h3>`;
+  const uploadButton = document.createElement("button");
+  uploadButton.className = "shop-buy";
+  const hasBackground = Boolean(progress.shop.customBackground);
+  uploadButton.textContent = hasBackground ? "Afbeelding wijzigen" : "Uploaden — 8 🍬";
+  uploadButton.disabled = !hasBackground && getCandyBalance() < 8;
+  uploadButton.onclick = () => document.getElementById("backgroundUpload").click();
+  backgroundCard.appendChild(uploadButton);
+  grid.appendChild(backgroundCard);
+}
+
+document.getElementById("shopButton").addEventListener("click", () => {
+  document.getElementById("shopOverlay").classList.add("open");
+  renderShop();
+});
+document.getElementById("shopClose").addEventListener("click", () => document.getElementById("shopOverlay").classList.remove("open"));
+document.getElementById("shopOverlay").addEventListener("click", event => {
+  if (event.target.id === "shopOverlay") event.currentTarget.classList.remove("open");
+});
+document.getElementById("backgroundUpload").addEventListener("change", event => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { alert("Kies een afbeeldingsbestand."); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      // Resize large uploads to keep local storage manageable.
+      const canvas = document.createElement("canvas");
+      const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", .82);
+      if (!progress.shop.customBackground) progress.spentCandies = (progress.spentCandies || 0) + 8;
+      progress.shop.customBackground = dataUrl;
+      progress.shop.activeTheme = "custom";
+      saveProgress();
+      applyShopAppearance();
+      renderShop();
+    };
+    img.onerror = () => alert("Deze afbeelding kon niet worden geopend.");
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = "";
+});
+
 /* START */
 
 createBoard();
 applySavedPuzzleState();
+applyShopAppearance();
 updateStarDisplay();
 </script>
 
