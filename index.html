@@ -261,7 +261,7 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 }
 
 .board.locked .cell {
-    background: #e8dcc5 !important;
+    background: var(--solved-cell, #e8dcc5);
     cursor: default;
 }
 
@@ -347,6 +347,10 @@ h1 { margin: 0 0 5px; font-size: 28px; }
 .shop-buy:disabled { background:#d9d9d9; color:#666; cursor:default; }
 .shop-note { color:#777; font-size:12px; margin-top:12px; line-height:1.45; }
 body.theme-default { background:#fff; }
+:root { --empty-cell: #fafafa; --solved-cell: #e8dcc5; }
+.custom-colors { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+.custom-color-row { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; }
+.custom-color-row input[type="color"] { width:42px; height:32px; border:1px solid #ddd; border-radius:6px; background:white; padding:2px; }
 body.theme-ocean { background:repeating-linear-gradient(135deg,#e9f9fb 0 12px,#ccecf0 12px 24px); }
 body.theme-sunset { background:repeating-linear-gradient(135deg,#fff0e5 0 12px,#fbd6c4 12px 24px); }
 body.theme-forest { background:repeating-linear-gradient(135deg,#edf5e9 0 12px,#d4e7ce 12px 24px); }
@@ -426,6 +430,11 @@ body.pulse-tiles .cell:hover { animation: tile-pulse .65s ease-in-out infinite a
   <div class="shop-panel">
     <div class="shop-head"><h2 id="shopTitle">♝ BiShop</h2><button class="shop-close" id="shopClose" aria-label="Close shop">✕</button></div>
     <div class="shop-balance" id="shopBalance">🍬 0 snoepjes</div>
+    <div class="shop-tabs" id="shopTabs">
+      <button class="shop-tab active" data-shop-tab="themes">Themes</button>
+      <button class="shop-tab" data-shop-tab="effects">Effects</button>
+      <button class="shop-tab" data-shop-tab="custom">Custom</button>
+    </div>
     <div class="shop-grid" id="shopGrid"></div>
   </div>
 </div>
@@ -491,7 +500,7 @@ let puzzleCompleted = false;
 let progress;
 
 function getDefaultProgress() {
-    return { currentPuzzle: 0, puzzles: {}, spentCandies: 0, shop: { ownedThemes: [], ownedEffects: [], activeTheme: "default", activeEffects: [], activeEffect: "", customBackground: "" } };
+    return { currentPuzzle: 0, puzzles: {}, spentCandies: 0, shop: { ownedThemes: [], ownedEffects: [], activeTheme: "default", activeEffects: [], activeEffect: "", customBackground: "", customPalette: null, customPaletteUnlocked: false, tileColorsUnlocked: false, emptyCellColor: "#fafafa", solvedCellColor: "#e8dcc5" } };
 }
 
 function loadProgress() {
@@ -526,6 +535,10 @@ function loadProgress() {
         parsed.shop.activeEffects = [...new Set(parsed.shop.activeEffects.filter(id => typeof id === "string"))];
         parsed.shop.activeEffect = parsed.shop.activeEffects[0] || ""; // legacy compatibility
         parsed.shop.customBackground = parsed.shop.customBackground || "";
+        parsed.shop.customPaletteUnlocked = parsed.shop.customPaletteUnlocked === true;
+        parsed.shop.tileColorsUnlocked = parsed.shop.tileColorsUnlocked === true;
+        parsed.shop.emptyCellColor = parsed.shop.emptyCellColor || "#fafafa";
+        parsed.shop.solvedCellColor = parsed.shop.solvedCellColor || "#e8dcc5";
         return parsed;
     } catch (error) {
         console.warn("Could not load Forked Up progress.", error);
@@ -594,7 +607,7 @@ function updateStarDisplay() {
     totalStarsElement.textContent = `🍬 ${getCandyBalance()}`;
     maxCandiesElement.textContent = `🟤 ${getTotalStars()}`;
     const balance = document.getElementById("shopBalance");
-    if (balance) balance.textContent = `🍬 ${getCandyBalance()} / ${getTotalStars()} snoepjes`;
+    if (balance) balance.textContent = `🍬 ${getCandyBalance()} / ${getTotalStars()}`;
 }
 
 function animateStarUnlock(previousTotal, newTotal, starsEarned) {
@@ -793,6 +806,12 @@ function applySavedPuzzleState() {
 
     if (puzzleCompleted) {
         completePuzzle(false);
+        getCells().forEach(cell => {
+            cell.style.background =
+                progress.shop.tileColorsUnlocked
+                    ? progress.shop.solvedCellColor
+                    : "var(--solved-cell, #e8dcc5)";
+        });
     } else {
         unlockPuzzle();
     }
@@ -1098,15 +1117,19 @@ function pointOnCircle(center, target, radius) {
 }
 
 function getArrowOffset(arrow) {
-    const sameArrows = arrows.filter(other =>
-        other.from === arrow.from && other.to === arrow.to
-    );
-
-    const index = sameArrows.indexOf(arrow);
-    const count = sameArrows.length;
-
-    if (count <= 1) return 0;
-    return (index - (count - 1) / 2) * 9;
+    // Offset arrows sharing the same line, including partially overlapping segments.
+    const a = getCellCenter(arrow.from), b = getCellCenter(arrow.to);
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    const group = arrows.filter(other => {
+        const c = getCellCenter(other.from), d = getCellCenter(other.to);
+        const ox = d.x - c.x, oy = d.y - c.y, olen = Math.hypot(ox, oy) || 1;
+        const parallel = Math.abs(ux * (oy / olen) - uy * (ox / olen)) < 0.025;
+        const lineDistance = Math.abs((c.x - a.x) * uy - (c.y - a.y) * ux);
+        return parallel && lineDistance < 5;
+    });
+    const index = group.indexOf(arrow), count = group.length;
+    return count <= 1 ? 0 : (index - (count - 1) / 2) * 9;
 }
 
 function renderArrows() {
@@ -1436,7 +1459,9 @@ function completePuzzle(save = true) {
 
     getCells().forEach(cell => {
         cell.querySelector(".markers").innerHTML = "";
-        cell.style.background = "#e8dcc5";
+        cell.style.background = progress.shop.tileColorsUnlocked
+            ? progress.shop.solvedCellColor
+            : "var(--solved-cell, #e8dcc5)";
         cell.dataset.fillColor = "";
     });
 
@@ -1515,7 +1540,7 @@ submitPuzzleButton.addEventListener("click", checkAnswer);
 /* BISSHOP: cosmetics */
 const shopCatalog = {
   themes: [
-    { id:"default", name:"Standaard", price:0, preview:"#ffffff", palette:{green:{fill:"#bfe3c4",line:"#18743a"},blue:{fill:"#c5dcfa",line:"#245bb5"},yellow:{fill:"#f7e7a3",line:"#a57a00"},orange:{fill:"#f3c2c2",line:"#c62828"}} },
+    { id:"default", name:"Standard", price:0, preview:"#ffffff", palette:{green:{fill:"#bfe3c4",line:"#18743a"},blue:{fill:"#c5dcfa",line:"#245bb5"},yellow:{fill:"#f7e7a3",line:"#a57a00"},orange:{fill:"#f3c2c2",line:"#c62828"}} },
     { id:"ocean", name:"Ocean Stripes", price:4, preview:"repeating-linear-gradient(135deg,#e9f9fb 0 10px,#bfe7ed 10px 20px)", palette:{green:{fill:"#b9e2cb",line:"#155d3a"},blue:{fill:"#b7e3f0",line:"#075c7c"},yellow:{fill:"#d9cdf6",line:"#593795"},orange:{fill:"#f5c7e0",line:"#9d2869"}} },
     { id:"sunset", name:"Sunset Stripes", price:4, preview:"repeating-linear-gradient(135deg,#fff0e5 0 10px,#f7c7b6 10px 20px)", palette:{green:{fill:"#f5b5b0",line:"#c62828"},blue:{fill:"#bcd9f7",line:"#245bb5"},yellow:{fill:"#ffec9e",line:"#ad7b00"},orange:{fill:"#ffd0a6",line:"#d96b12"}} },
     { id:"forest", name:"Forest Stripes", price:4, preview:"repeating-linear-gradient(135deg,#edf5e9 0 10px,#cfe2c7 10px 20px)", palette:{green:{fill:"#bfe3c4",line:"#237a3b"},blue:{fill:"#bfdcf7",line:"#2465b4"},yellow:{fill:"#d8c7f3",line:"#6639a6"},orange:{fill:"#f5c7e2",line:"#b62b79"}} },
@@ -1523,7 +1548,7 @@ const shopCatalog = {
   ],
   effects: [
     { id:"pulse", name:"Pulse Tiles", price:4, preview:"radial-gradient(circle,#ffffff,#dce3f5)" },
-    { id:"confetti", name:"Confetti bij level-complete", price:4, preview:"linear-gradient(135deg,#ff6b6b 0 16%,#ffd93d 16% 32%,#6bcb77 32% 48%,#4d96ff 48% 64%,#b983ff 64% 80%,#ff8fab 80%)" }
+    { id:"confetti", name:"Confetti", price:4, preview:"linear-gradient(135deg,#ff6b6b 0 16%,#ffd93d 16% 32%,#6bcb77 32% 48%,#4d96ff 48% 64%,#b983ff 64% 80%,#ff8fab 80%)" }
   ]
 };
 const defaultPalette = shopCatalog.themes[0].palette;
@@ -1539,7 +1564,10 @@ function applyShopAppearance() {
     document.body.style.backgroundImage = "";
   }
   const selected = shopCatalog.themes.find(item => item.id === theme);
-  colors = selected ? selected.palette : defaultPalette;
+  colors = (theme === "custom" && shop.customPaletteUnlocked && shop.customPalette)
+    ? shop.customPalette : (selected ? selected.palette : defaultPalette);
+  document.documentElement.style.setProperty("--empty-cell", shop.tileColorsUnlocked ? shop.emptyCellColor : "#fafafa");
+  document.documentElement.style.setProperty("--solved-cell", shop.tileColorsUnlocked ? shop.solvedCellColor : "#e8dcc5");
   document.querySelectorAll(".color-button").forEach(button => {
     const c = colors[button.dataset.color];
     if (c) {
@@ -1565,7 +1593,9 @@ function renderShop() {
   updateStarDisplay();
   const grid = document.getElementById("shopGrid");
   grid.innerHTML = "";
-  const items = [...shopCatalog.themes, ...shopCatalog.effects];
+  const activeTab = document.querySelector(".shop-tab.active")?.dataset.shopTab || "themes";
+  if (activeTab === "custom") { renderCustomShop(grid); return; }
+  const items = activeTab === "effects" ? shopCatalog.effects : shopCatalog.themes;
   items.forEach(item => {
     const isTheme = shopCatalog.themes.some(theme => theme.id === item.id);
     const ownedList = isTheme ? progress.shop.ownedThemes : progress.shop.ownedEffects;
@@ -1577,7 +1607,7 @@ function renderShop() {
     card.innerHTML = `<div class="shop-preview" style="background:${item.preview}"></div><h3>${item.name}</h3>`;
     const button = document.createElement("button");
     button.className = "shop-buy";
-    button.textContent = active ? (isTheme ? "Actief ✓" : "Unequip") : owned ? "Equip" : `Kopen — ${item.price} 🍬`;
+    button.textContent = active ? (isTheme ? "Active ✓" : "Unequip") : owned ? "Equip" : `${item.price} 🍬`;
     // Effects can be toggled off again; themes stay equipped until another theme is selected.
     button.disabled = (active && isTheme) || (!active && !owned && getCandyBalance() < item.price);
     button.onclick = () => {
@@ -1606,18 +1636,142 @@ function renderShop() {
     card.appendChild(button);
     grid.appendChild(card);
   });
+  if (activeTab !== "themes") return;
   const backgroundCard = document.createElement("div");
   backgroundCard.className = "shop-item";
-  backgroundCard.innerHTML = `<div class="shop-preview" style="background:linear-gradient(135deg,#f7d7ec,#d4e7ff)"></div><h3>Eigen afbeelding</h3>`;
+  backgroundCard.innerHTML = `<div class="shop-preview" style="background:linear-gradient(135deg,#f7d7ec,#d4e7ff)"></div><h3>Custom Image</h3>`;
   const uploadButton = document.createElement("button");
   uploadButton.className = "shop-buy";
   const hasBackground = Boolean(progress.shop.customBackground);
-  uploadButton.textContent = hasBackground ? "Afbeelding wijzigen" : "Uploaden — 8 🍬";
+  uploadButton.textContent = hasBackground ? "Afbeelding wijzigen" : "8 🍬";
   uploadButton.disabled = !hasBackground && getCandyBalance() < 8;
   uploadButton.onclick = () => document.getElementById("backgroundUpload").click();
   backgroundCard.appendChild(uploadButton);
   grid.appendChild(backgroundCard);
 }
+
+function renderCustomShop(grid) {
+  const shop = progress.shop;
+  const paletteCard = document.createElement("div");
+  paletteCard.className = "shop-item"; paletteCard.style.gridColumn = "1 / -1";
+  paletteCard.innerHTML = `<h3>Custom Colors</h3><p></p>`;
+
+  const paletteBuy = document.createElement("button");
+  paletteBuy.className = "shop-buy";
+
+  const customColorsActive =
+      shop.activeTheme === "custom" &&
+      shop.customPaletteUnlocked;
+
+  paletteBuy.textContent = customColorsActive
+      ? "Unequip"
+      : shop.customPaletteUnlocked
+          ? "Equip"
+          : "4 🍬";
+
+  paletteBuy.disabled =
+      !shop.customPaletteUnlocked &&
+      getCandyBalance() < 4;
+
+  paletteBuy.onclick = () => {
+      if (!shop.customPaletteUnlocked) {
+          if (getCandyBalance() < 4) return;
+
+          progress.spentCandies += 4;
+          shop.customPaletteUnlocked = true;
+          shop.customPalette = JSON.parse(
+              JSON.stringify(defaultPalette)
+          );
+          shop.activeTheme = "custom";
+      } else if (shop.activeTheme === "custom") {
+          // Schakel custom kleuren uit en ga terug naar Standard.
+          shop.activeTheme = "default";
+      } else {
+          // Activeer de eerder gekochte custom kleuren opnieuw.
+          shop.activeTheme = "custom";
+      }
+
+      saveProgress();
+      applyShopAppearance();
+      renderShop();
+  };
+  
+  paletteCard.appendChild(paletteBuy);
+  if (shop.customPaletteUnlocked) {
+    shop.customPalette ||= JSON.parse(JSON.stringify(defaultPalette));
+    const controls = document.createElement("div"); controls.className = "custom-colors";
+    Object.entries({green:"Color 1",blue:"Color 2",yellow:"Color 3",orange:"Color 4"}).forEach(([key,label]) => {
+      const row = document.createElement("div"); row.className = "custom-color-row";
+      row.innerHTML = `<strong>${label}</strong>`;
+      ["fill","line"].forEach(kind => {
+        const input = document.createElement("input"); input.type = "color";
+        input.title = kind === "fill" ? `${label}: vakjes` : `${label}: pijlen en markeringen`;
+        input.value = shop.customPalette[key][kind];
+        input.addEventListener("input", () => {
+          shop.customPalette[key][kind] = input.value; shop.activeTheme = "custom";
+          saveProgress(); applyShopAppearance();
+        });
+        row.appendChild(input);
+      });
+      controls.appendChild(row);
+    });
+    paletteCard.appendChild(controls);
+    const note = document.createElement("p"); note.textContent = "";
+    paletteCard.appendChild(note);
+  }
+  grid.appendChild(paletteCard);
+
+  const tileCard = document.createElement("div"); tileCard.className = "shop-item"; tileCard.style.gridColumn = "1 / -1";
+  tileCard.innerHTML = `<h3>Empty/Filled Tiles Colors</h3><p></p>`;
+  const tileBuy = document.createElement("button"); tileBuy.className = "shop-buy";
+  tileBuy.textContent = shop.tileColorsUnlocked ? "Purchased ✓" : "2 🍬";
+  tileBuy.disabled = shop.tileColorsUnlocked || getCandyBalance() < 2;
+  tileBuy.onclick = () => {
+    if (shop.tileColorsUnlocked || getCandyBalance() < 2) return;
+    progress.spentCandies += 2; shop.tileColorsUnlocked = true;
+    saveProgress(); applyShopAppearance(); renderShop();
+  };
+  tileCard.appendChild(tileBuy);
+  if (shop.tileColorsUnlocked) {
+    [["Empty","emptyCellColor"],["Solved","solvedCellColor"]].forEach(([label,key]) => {
+      const row = document.createElement("div"); row.className = "custom-color-row"; row.style.marginTop = "10px";
+      row.innerHTML = `<strong>${label}</strong>`;
+      const input = document.createElement("input"); input.type = "color"; input.value = shop[key];
+      input.addEventListener("input", () => {
+          shop[key] = input.value;
+          saveProgress();
+          applyShopAppearance();
+
+          getCells().forEach(cell => {
+              if (puzzleCompleted) {
+                  cell.style.background = shop.tileColorsUnlocked
+                      ? shop.solvedCellColor
+                      : "var(--solved-cell, #e8dcc5)";
+              } else if (!cell.dataset.fillColor) {
+                  cell.style.background = shop.tileColorsUnlocked
+                      ? shop.emptyCellColor
+                      : "var(--empty-cell, #fafafa)";
+              }
+          });
+      });
+      row.appendChild(input); tileCard.appendChild(row);
+    });
+  }
+  grid.appendChild(tileCard);
+
+  const bgCard = document.createElement("div"); bgCard.className = "shop-item";
+  bgCard.innerHTML = `<div class="shop-preview" style="background:linear-gradient(135deg,#f7d7ec,#d4e7ff)"></div><h3>Custom Image</h3><p></p>`;
+  const upload = document.createElement("button"); upload.className = "shop-buy";
+  upload.textContent = shop.customBackground ? "Afbeelding wijzigen" : "8 🍬";
+  upload.disabled = !shop.customBackground && getCandyBalance() < 8;
+  upload.onclick = () => document.getElementById("backgroundUpload").click();
+  bgCard.appendChild(upload); grid.appendChild(bgCard);
+}
+
+document.querySelectorAll(".shop-tab").forEach(tab => tab.addEventListener("click", () => {
+  document.querySelectorAll(".shop-tab").forEach(other => other.classList.toggle("active", other === tab));
+  renderShop();
+}));
 
 document.getElementById("shopButton").addEventListener("click", () => {
   document.getElementById("shopOverlay").classList.add("open");
@@ -1649,7 +1803,7 @@ document.getElementById("backgroundUpload").addEventListener("change", event => 
       applyShopAppearance();
       renderShop();
     };
-    img.onerror = () => alert("Deze afbeelding kon niet worden geopend.");
+    img.onerror = () => alert("This Image coudn't be opened.");
     img.src = reader.result;
   };
   reader.readAsDataURL(file);
