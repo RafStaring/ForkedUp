@@ -53,7 +53,32 @@ body {
 }
 
 h1 { margin: 0 0 5px; font-size: 28px; }
-.subtitle { margin-bottom: 18px; color: #666; font-size: 15px; }
+.subtitle { margin-bottom: 12px; color: #666; font-size: 15px; }
+.mode-picker { margin: 0 auto 18px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+.mode-button { border:1px solid #ccc; border-radius:9px; padding:9px 14px; background:#fff; cursor:pointer; font-weight:600; }
+.mode-button.active { background:#222; color:#fff; border-color:#222; }
+.capture-counts { display:none; width:104px; flex:0 0 104px; margin:0; gap:10px; flex-direction:column; justify-content:center; align-items:stretch; }
+.capture-count { display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid #ddd; border-radius:8px; padding:8px 10px; background:#fafafa; font-size:16px; cursor:pointer; user-select:none; transition:border-color .12s, background .12s, box-shadow .12s; }
+.capture-count.selected { border-color:#333; background:#f0f0f0; box-shadow:0 0 0 2px #3332; }
+.capture-count:focus-visible { outline:2px solid #333; outline-offset:2px; }
+body.capture-mode .cell .piece { width:58%; height:58%; }
+.capture-count img { width:25px; height:25px; object-fit:contain; }
+.capture-board-area { display:flex; align-items:center; justify-content:center; gap:24px; width:fit-content; max-width:100%; margin:0 auto; }
+.capture-layout { display:none; width:min(1120px, 100%); margin:30px auto 0; }
+.loop-grid { display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, 1fr); gap:2px; width:clamp(185px, 19vw, 235px); aspect-ratio:1; position:relative; margin:0 auto; }
+.loop-cell { border:1px solid #d9d9d9; background:#fbfbfb; color:#888; font-size:11px; display:flex; align-items:center; justify-content:center; min-width:0; }
+.loop-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+.loop-lines line { stroke:#333; stroke-width:2.4; stroke-linecap:round; }
+.loop-card { border:1px solid #e2e2e2; border-radius:14px; padding:16px; background:#fff; }
+.loop-card h3 { margin:0 0 12px; font-size:15px; }
+.loop-card p { margin:10px 0 0; font-size:12px; color:#666; }
+.loop-cards { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:22px 26px; align-items:start; }
+.capture-note { color:#666; font-size:13px; margin:0 auto 16px; max-width:720px; }
+body.capture-mode .capture-board-area { gap:24px; }
+body.capture-mode .board { gap:4px; }
+body.capture-mode .cell { cursor:pointer; }
+@media (max-width:850px) { .loop-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } .loop-grid { width:clamp(165px, 28vw, 220px); } }
+@media (max-width:600px) { .capture-board-area { flex-direction:column; gap:10px; width:100%; } .capture-counts { width:100%; flex-basis:auto; flex-direction:row; flex-wrap:wrap; gap:6px; } .capture-count { padding:6px 8px; gap:4px; font-size:13px; } .capture-count img { width:20px; height:20px; } .loop-cards { grid-template-columns:1fr; gap:14px; } .loop-grid { width:min(100%, 240px); } .loop-card { padding:12px; } .loop-card h3 { font-size:13px; } }
 
 .colors {
     display: flex;
@@ -391,6 +416,11 @@ body.pulse-tiles .cell:hover { animation: tile-pulse .65s ease-in-out infinite a
 
 <h1>Forked Up</h1>
 <div class="subtitle">Create groups of four!</div>
+<div class="mode-picker" aria-label="Game mode">
+    <button class="mode-button active" id="standardMode">Standard</button>
+    <button class="mode-button" id="captureModeButton">Connect 5?</button>
+</div>
+<p class="capture-note" id="captureNote" style="display:none">Fill in the pieces using the 5 possible groups. Then solve it as a standard puzzle.</p>
 
 <div class="colors">
     <button class="color-button green selected" data-color="green" aria-label="Green"></button>
@@ -406,11 +436,22 @@ body.pulse-tiles .cell:hover { animation: tile-pulse .65s ease-in-out infinite a
     <button class="tool-button" data-tool="cross" title="Cross">×</button>
 </div>
 
-<div class="board-wrapper">
+<div class="capture-board-area">
+    <div class="capture-counts" id="captureCounts" aria-label="Piece counts">
+        <div class="capture-count" data-piece="C" role="button" tabindex="0" aria-label="Select rook"><img src="https://lichess1.org/assets/piece/rhosgfx/wR.svg" alt="Rook"><b>7</b></div>
+        <div class="capture-count" data-piece="A" role="button" tabindex="0" aria-label="Select knight"><img src="https://lichess1.org/assets/piece/rhosgfx/wN.svg" alt="Knight"><b>4</b></div>
+        <div class="capture-count" data-piece="B" role="button" tabindex="0" aria-label="Select bishop"><img src="https://lichess1.org/assets/piece/rhosgfx/wB.svg" alt="Bishop"><b>3</b></div>
+        <div class="capture-count" data-piece="D" role="button" tabindex="0" aria-label="Select pawn"><img src="https://lichess1.org/assets/piece/rhosgfx/wP.svg" alt="Pawn"><b>2</b></div>
+    </div>
+    <div class="board-wrapper">
     <div class="board" id="board">
         <svg id="arrowLayer" class="arrow-layer"
              xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
+    </div>
+</div>
+<div class="capture-layout" id="captureLayout">
+    <div class="loop-cards" id="loopCards"></div>
 </div>
 
 <div class="bottom-buttons">
@@ -503,6 +544,8 @@ const STORAGE_KEY = "forkedUpProgress_v1";
 
 let currentPuzzle = 0;
 let puzzleCompleted = false;
+let captureMode = false;
+let puzzleBeforeCapture = 0;
 let progress;
 
 function getDefaultProgress() {
@@ -596,11 +639,15 @@ let dragCurrent = null;
 
 /* STARS AND PROGRESS */
 
+const captureLoopStars = 5;
+
 function getTotalStars() {
-    return puzzleStars.reduce((total, stars, index) => {
+    const standardStars = puzzleStars.reduce((total, stars, index) => {
         const puzzle = progress.puzzles[String(index)];
         return total + (puzzle && puzzle.completed ? stars : 0);
     }, 0);
+    const capturePuzzle = progress.puzzles.captureLoops;
+    return standardStars + (capturePuzzle && capturePuzzle.completed ? captureLoopStars : 0);
 }
 
 function getCandyBalance() {
@@ -608,7 +655,7 @@ function getCandyBalance() {
 }
 
 function updateStarDisplay() {
-    const stars = puzzleStars[currentPuzzle] ?? 0;
+    const stars = captureMode ? captureLoopStars : (puzzleStars[currentPuzzle] ?? 0);
     levelStarsElement.textContent = `⭐ ${stars}`;
     totalStarsElement.textContent = `🍬 ${getCandyBalance()}`;
     maxCandiesElement.textContent = `🟤 ${getTotalStars()}`;
@@ -709,14 +756,17 @@ function getMarkerType(marker) {
     return "open";
 }
 
+function progressPuzzleKey() { return captureMode ? "captureLoops" : String(currentPuzzle); }
+
 function getPuzzleProgress() {
-    const saved = progress.puzzles[String(currentPuzzle)];
+    const saved = progress.puzzles[progressPuzzleKey()];
 
     if (!saved || typeof saved !== "object") {
         return {
             fills: Array(16).fill(null),
             markers: Array.from({ length: 16 }, () => []),
             arrows: [],
+            placedPieces: Array(16).fill(null),
             completed: false
         };
     }
@@ -727,16 +777,18 @@ function getPuzzleProgress() {
             ? saved.markers
             : Array.from({ length: 16 }, () => []),
         arrows: Array.isArray(saved.arrows) ? saved.arrows : [],
+        placedPieces: Array.isArray(saved.placedPieces) ? saved.placedPieces : Array(16).fill(null),
         completed: saved.completed === true
     };
 }
 
 function saveCurrentPuzzle() {
     if (puzzleCompleted) {
-        progress.puzzles[String(currentPuzzle)] = {
+        progress.puzzles[progressPuzzleKey()] = {
             fills: Array(16).fill(null),
             markers: Array.from({ length: 16 }, () => []),
             arrows: [],
+            placedPieces: Array(16).fill(null),
             completed: true
         };
         saveProgress();
@@ -755,10 +807,11 @@ function saveCurrentPuzzle() {
         }));
     });
 
-    progress.puzzles[String(currentPuzzle)] = {
+    progress.puzzles[progressPuzzleKey()] = {
         fills,
         markers,
         arrows: arrows.map(arrow => ({ ...arrow })),
+        placedPieces: cells.map(cell => cell.dataset.pieceType || null),
         completed: false
     };
 
@@ -782,6 +835,19 @@ function applySavedPuzzleState() {
             fillColor && colors[fillColor]
                 ? colors[fillColor].fill
                 : "var(--empty-cell, #fafafa)";
+
+        cell.dataset.pieceType = "";
+        const oldPlacedPiece = cell.querySelector(".placed-piece");
+        if (oldPlacedPiece) oldPlacedPiece.remove();
+        const placedType = captureMode ? (saved.placedPieces[index] || null) : null;
+        if (placedType && pieces[placedType]) {
+            const placedImg = document.createElement("img");
+            placedImg.className = "piece placed-piece";
+            placedImg.src = pieces[placedType];
+            placedImg.alt = ({A:"Knight",B:"Bishop",C:"Rook",D:"Pawn"})[placedType];
+            cell.insertBefore(placedImg, cell.querySelector(".markers"));
+            cell.dataset.pieceType = placedType;
+        }
 
         const markers = cell.querySelector(".markers");
         markers.innerHTML = "";
@@ -823,6 +889,7 @@ function applySavedPuzzleState() {
     }
 
     renderArrows();
+    updateCaptureCounts();
 }
 
 /* SLASH RULES
@@ -831,6 +898,7 @@ function applySavedPuzzleState() {
 */
 
 function getSlashType(index) {
+    if (captureMode) return "";
     const levelSlashes = slashes[currentPuzzle] || [];
     return levelSlashes[index] || null;
 }
@@ -896,11 +964,13 @@ function createBoard() {
         cell.className = "cell";
         cell.dataset.index = index;
 
-        const img = document.createElement("img");
-        img.className = "piece";
-        img.src = pieces[pieceType];
-        img.alt = pieceType;
-        cell.appendChild(img);
+        if (!captureMode) {
+            const img = document.createElement("img");
+            img.className = "piece";
+            img.src = pieces[pieceType];
+            img.alt = pieceType;
+            cell.appendChild(img);
+        }
 
         const markers = document.createElement("div");
         markers.className = "markers";
@@ -926,6 +996,104 @@ function createBoard() {
     setupCellEvents();
 }
 
+const captureLoops = [
+    ["A2", "A3", "C1", "C3", "A2"],
+    ["B1", "C2", "B4", "A3", "B1"],
+    ["A2", "D2", "C3", "B2", "A2"],
+    ["B2", "B4", "D3", "B3", "B2"],
+    ["B4", "D4", "D1", "C2", "B4"]
+];
+function coordinatePoint(coord) {
+    const col = coord.charCodeAt(0) - 65;
+    const row = Number(coord[1]) - 1;
+    return { x: (col + .5) * 25, y: (row + .5) * 25 };
+}
+function renderCaptureLoops() {
+    const host = document.getElementById("loopCards");
+    host.innerHTML = "";
+    captureLoops.forEach((loop, loopIndex) => {
+        const card = document.createElement("section");
+        card.className = "loop-card";
+        const heading = document.createElement("h3");
+        heading.textContent = `Possible loop ${loopIndex + 1}`;
+        card.appendChild(heading);
+        const grid = document.createElement("div");
+        grid.className = "loop-grid";
+        for (let row = 1; row <= 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const cell = document.createElement("div");
+                cell.className = "loop-cell";
+                cell.textContent = String.fromCharCode(65 + col) + row;
+                grid.appendChild(cell);
+            }
+        }
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "loop-lines");
+        svg.setAttribute("viewBox", "0 0 100 100");
+        loop.slice(0, -1).forEach((coord, i) => {
+            const a = coordinatePoint(coord), b = coordinatePoint(loop[i + 1]);
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", a.x); line.setAttribute("y1", a.y);
+            line.setAttribute("x2", b.x); line.setAttribute("y2", b.y);
+            svg.appendChild(line);
+        });
+        grid.appendChild(svg);
+        card.appendChild(grid);
+        const desc = document.createElement("p");
+        desc.textContent = loop.join("  ·  ");
+        card.appendChild(desc);
+        host.appendChild(card);
+    });
+}
+function setGameMode(useCaptureMode) {
+    if (captureMode === useCaptureMode) return;
+    if (captureMode) {
+        saveCurrentPuzzle();
+        captureMode = false;
+        currentPuzzle = puzzleBeforeCapture;
+    } else {
+        saveCurrentPuzzle();
+        puzzleBeforeCapture = currentPuzzle;
+        captureMode = true;
+        currentPuzzle = 2; // This mode uses the third puzzle's grouping solution.
+    }
+    document.body.classList.toggle("capture-mode", captureMode);
+    document.getElementById("standardMode").classList.toggle("active", !captureMode);
+    document.getElementById("captureModeButton").classList.toggle("active", captureMode);
+    document.getElementById("captureCounts").style.display = captureMode ? "flex" : "none";
+    document.getElementById("captureLayout").style.display = captureMode ? "block" : "none";
+    document.getElementById("captureNote").style.display = captureMode ? "block" : "none";
+    document.querySelector(".subtitle").textContent = captureMode ? "Deduce the pieces. Group the squares." : "Create groups of four!";
+    renderCaptureLoops();
+    prepareNewPuzzle();
+}
+document.getElementById("standardMode").addEventListener("click", () => setGameMode(false));
+document.getElementById("captureModeButton").addEventListener("click", () => setGameMode(true));
+
+const capturePieceTotals = { C: 7, A: 4, B: 3, D: 2 };
+function updateCaptureCounts() {
+    const placed = [...getCells()].map(cell => cell.dataset.pieceType || null);
+    document.querySelectorAll(".capture-count").forEach(button => {
+        const type = button.dataset.piece;
+        const remaining = capturePieceTotals[type] - placed.filter(piece => piece === type).length;
+        button.querySelector("b").textContent = String(remaining);
+        button.classList.toggle("selected", captureMode && selectedTool === `piece-${type}`);
+        button.setAttribute("aria-pressed", String(captureMode && selectedTool === `piece-${type}`));
+    });
+}
+function selectCapturePiece(type) {
+    if (puzzleCompleted || !captureMode) return;
+    selectedTool = selectedTool === `piece-${type}` ? "filled" : `piece-${type}`;
+    document.querySelectorAll(".tool-button").forEach(button => button.classList.toggle("selected", button.dataset.tool === selectedTool));
+    updateCaptureCounts();
+}
+document.querySelectorAll(".capture-count").forEach(button => {
+    button.addEventListener("click", () => selectCapturePiece(button.dataset.piece));
+    button.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectCapturePiece(button.dataset.piece); }
+    });
+});
+
 function setupCellEvents() {
     getCells().forEach(cell => {
         cell.addEventListener("click", () => {
@@ -937,6 +1105,29 @@ function setupCellEvents() {
             }
 
             const color = colors[selectedColor];
+
+            if (captureMode && selectedTool.startsWith("piece-")) {
+                const selectedType = selectedTool.slice(6);
+                const existingType = cell.dataset.pieceType || "";
+                if (existingType === selectedType) {
+                    cell.querySelector(".placed-piece")?.remove();
+                    cell.dataset.pieceType = "";
+                } else {
+                    let img = cell.querySelector(".placed-piece");
+                    if (!img) {
+                        img = document.createElement("img");
+                        img.className = "piece placed-piece";
+                        cell.insertBefore(img, cell.querySelector(".markers"));
+                    }
+                    img.src = pieces[selectedType];
+                    img.alt = ({A:"Knight",B:"Bishop",C:"Rook",D:"Pawn"})[selectedType];
+                    cell.dataset.pieceType = selectedType;
+                }
+                resultMessage.textContent = "";
+                updateCaptureCounts();
+                saveCurrentPuzzle();
+                return;
+            }
 
             if (selectedTool === "filled") {
                 const cellIndex = Number(cell.dataset.index);
@@ -995,7 +1186,7 @@ function setupCellEvents() {
         });
 
         cell.addEventListener("mousedown", event => {
-            if (puzzleCompleted || event.button !== 0) return;
+            if (puzzleCompleted || event.button !== 0 || (captureMode && selectedTool.startsWith("piece-"))) return;
 
             dragging = true;
             dragStart = Number(cell.dataset.index);
@@ -1028,6 +1219,7 @@ document.querySelectorAll(".tool-button").forEach(button => {
         if (puzzleCompleted) return;
 
         selectedTool = button.dataset.tool;
+        updateCaptureCounts();
 
         document.querySelectorAll(".tool-button").forEach(b => {
             b.classList.remove("selected");
@@ -1263,9 +1455,12 @@ function resetPuzzle() {
         cell.style.background = "var(--empty-cell, #fafafa)";
         cell.dataset.fillColor = "";
         cell.querySelector(".markers").innerHTML = "";
+        cell.querySelector(".placed-piece")?.remove();
+        cell.dataset.pieceType = "";
     });
 
     arrows = [];
+    updateCaptureCounts();
     resultMessage.textContent = "";
     renderArrows();
     saveCurrentPuzzle();
@@ -1295,6 +1490,7 @@ function prepareNewPuzzle() {
     arrows = [];
     createBoard();
     applySavedPuzzleState();
+    updateCaptureCounts();
     applyShopAppearance();
 }
 
@@ -1453,7 +1649,7 @@ window.addEventListener("resize", () => {
 
 function completePuzzle(save = true) {
     const previousTotal = getCandyBalance();
-    const starsEarned = puzzleStars[currentPuzzle] || 0;
+    const starsEarned = captureMode ? captureLoopStars : (puzzleStars[currentPuzzle] || 0);
 
     puzzleCompleted = true;
     dragging = false;
@@ -1481,10 +1677,11 @@ function completePuzzle(save = true) {
     resultMessage.textContent = "Puzzle complete!";
 
     if (save) {
-        progress.puzzles[String(currentPuzzle)] = {
+        progress.puzzles[progressPuzzleKey()] = {
             fills: Array(16).fill(null),
             markers: Array.from({ length: 16 }, () => []),
             arrows: [],
+            placedPieces: Array(16).fill(null),
             completed: true
         };
 
@@ -1513,6 +1710,7 @@ function unlockPuzzle() {
 }
 
 document.getElementById("nextPuzzle").addEventListener("click", () => {
+    if (captureMode) return;
     if (currentPuzzle < puzzles.length - 1) {
         saveCurrentPuzzle();
 
@@ -1529,6 +1727,7 @@ document.getElementById("nextPuzzle").addEventListener("click", () => {
 });
 
 document.getElementById("previousPuzzle").addEventListener("click", () => {
+    if (captureMode) return;
     if (currentPuzzle === 0) return;
 
     saveCurrentPuzzle();
