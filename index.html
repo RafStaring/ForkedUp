@@ -380,6 +380,7 @@ body.theme-ocean { background:repeating-linear-gradient(135deg,#e9f9fb 0 12px,#c
 body.theme-sunset { background:repeating-linear-gradient(135deg,#fff0e5 0 12px,#fbd6c4 12px 24px); }
 body.theme-forest { background:repeating-linear-gradient(135deg,#edf5e9 0 12px,#d4e7ce 12px 24px); }
 body.theme-lavender { background:repeating-linear-gradient(135deg,#f5efff 0 12px,#e4d8fa 12px 24px); }
+body.theme-fork{background-image:url("fork.png");background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:fixed;}
 body.theme-custom { background-position:center; background-size:cover; background-attachment:fixed; background-repeat:no-repeat; }
 body.theme-custom::before { content:""; position:fixed; inset:0; background:rgba(255,255,255,.42); pointer-events:none; z-index:-1; }
 body.pulse-tiles .cell:hover { animation: tile-pulse .65s ease-in-out infinite alternate; }
@@ -1749,6 +1750,7 @@ const shopCatalog = {
     { id:"ocean", name:"Ocean Stripes", price:4, preview:"repeating-linear-gradient(135deg,#e9f9fb 0 10px,#bfe7ed 10px 20px)", palette:{green:{fill:"#b9e2cb",line:"#155d3a"},blue:{fill:"#b7e3f0",line:"#075c7c"},yellow:{fill:"#d9cdf6",line:"#593795"},orange:{fill:"#f5c7e0",line:"#9d2869"}} },
     { id:"sunset", name:"Sunset Stripes", price:4, preview:"repeating-linear-gradient(135deg,#fff0e5 0 10px,#f7c7b6 10px 20px)", palette:{green:{fill:"#f5b5b0",line:"#c62828"},blue:{fill:"#bcd9f7",line:"#245bb5"},yellow:{fill:"#ffec9e",line:"#ad7b00"},orange:{fill:"#ffd0a6",line:"#d96b12"}} },
     { id:"forest", name:"Forest Stripes", price:4, preview:"repeating-linear-gradient(135deg,#edf5e9 0 10px,#cfe2c7 10px 20px)", palette:{green:{fill:"#bfe3c4",line:"#237a3b"},blue:{fill:"#bfdcf7",line:"#2465b4"},yellow:{fill:"#d8c7f3",line:"#6639a6"},orange:{fill:"#f5c7e2",line:"#b62b79"}} },
+    { id:"fork",name:"Fork Theme",price:6,preview:'url("fork.png") center/cover',palette:{green:{fill:"#bfe3c4",line:"#18743a"},blue:{fill:"#c5dcfa",line:"#245bb5"},yellow:{fill:"#f7e7a3",line:"#a57a00"},orange:{fill:"#f3c2c2",line:"#c62828"}}},
     { id:"lavender", name:"Lavender Stripes", price:4, preview:"repeating-linear-gradient(135deg,#f5efff 0 10px,#dfd0f7 10px 20px)", palette:{green:{fill:"#c8e8d2",line:"#276746"},blue:{fill:"#c5dafa",line:"#2856a4"},yellow:{fill:"#dfc9f4",line:"#7040a2"},orange:{fill:"#f5c9e2",line:"#a92e70"}} }
   ],
   effects: [
@@ -1760,7 +1762,7 @@ const defaultPalette = shopCatalog.themes[0].palette;
 
 function applyShopAppearance() {
   const shop = progress.shop;
-  document.body.classList.remove("theme-default","theme-ocean","theme-sunset","theme-forest","theme-lavender","theme-custom","pulse-tiles");
+  document.body.classList.remove("theme-default","theme-ocean","theme-sunset","theme-forest","theme-lavender","theme-fork","theme-custom","pulse-tiles");
   const theme = shop.activeTheme || "default";
   document.body.classList.add("theme-" + (theme === "custom" ? "custom" : theme));
   if (theme === "custom" && shop.customBackground) {
