@@ -655,14 +655,13 @@ function getTotalStars() {
 }
 
 function getCandyBalance() {
-    // Rond snoepjes altijd naar boven af op één decimaal (bijv. 1.2229 -> 1.3).
+    // Rond snoepjes af op hele getallen (bijv. 1.3 -> 1).
     const balance = Math.max(0, getTotalStars() - (progress.spentCandies || 0));
-    return Math.ceil((balance - Number.EPSILON) * 10) / 10;
+    return Math.round(balance);
 }
 
 function formatCandies(amount) {
-    const rounded = Number(Number(amount).toFixed(1));
-    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    return String(Math.round(Number(amount) || 0));
 }
 
 function updateStarDisplay() {
