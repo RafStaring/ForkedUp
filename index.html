@@ -794,7 +794,12 @@ function getPuzzleProgress() {
             ? saved.markers
             : Array.from({ length: 16 }, () => []),
         arrows: Array.isArray(saved.arrows) ? saved.arrows : [],
-        placedPieces: Array.isArray(saved.placedPieces) ? saved.placedPieces : Array(16).fill(null),
+        placedPieces: Array.isArray(saved.placedPieces)
+            ? Array.from({ length: 16 }, (_, index) => {
+                const piece = saved.placedPieces[index];
+                return ["A", "B", "C", "D"].includes(piece) ? piece : null;
+            })
+            : Array(16).fill(null),
         completed: saved.completed === true
     };
 }
@@ -915,7 +920,11 @@ function applySavedPuzzleState() {
 */
 
 function getSlashType(index) {
-    if (captureMode) return "";
+    if (captureMode) {
+        // Capture Loops level 2: both fixed slashes are type A.
+        if (captureLevelIndex === 1 && (index === 9 || index === 11)) return "A"; // B3 and D3
+        return null;
+    }
     const levelSlashes = slashes[currentPuzzle] || [];
     return levelSlashes[index] || null;
 }
@@ -975,6 +984,8 @@ function checkSlashRules(cells) {
 
 function createBoard() {
     document.querySelectorAll(".cell").forEach(cell => cell.remove());
+    // Rebuild the board cleanly so old piece elements cannot leak between modes/levels.
+    board.querySelectorAll(".placed-piece").forEach(piece => piece.remove());
 
     puzzles[currentPuzzle].forEach((pieceType, index) => {
         const cell = document.createElement("div");
