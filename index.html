@@ -503,6 +503,8 @@ const puzzles = [
     ["B","A","A","B","C","D","C","B","A","D","A","C","C","B","D","B"]
 ];
 
+const captureLevel2Solution = ["A","B","C","D","B","C","A","D","A","B","D","C","D","C","B","A"];
+
 const answers = [
     ["A","B","C","A","B","B","A","D","C","D","D","B","D","C","C","A"],
     ["A","B","B","B","B","C","A","D","C","D","C","C","D","A","D","A"],
@@ -644,6 +646,12 @@ let dragCurrent = null;
 /* STARS AND PROGRESS */
 
 const captureLoopStars = 5;
+const captureLoopLevelStars = [5, 8];
+let captureLoopLevel = 0;
+const captureLevelPieceTotals = [
+    { C: 7, A: 4, B: 3, D: 2 },
+    { C: 4, A: 5, B: 4, D: 3 }
+];
 
 function getTotalStars() {
     const standardStars = puzzleStars.reduce((total, stars, index) => {
@@ -651,7 +659,10 @@ function getTotalStars() {
         return total + (puzzle && puzzle.completed ? stars : 0);
     }, 0);
     const capturePuzzle = progress.puzzles.captureLoops;
-    return standardStars + (capturePuzzle && capturePuzzle.completed ? captureLoopStars : 0);
+    const capturePuzzle2 = progress.puzzles.captureLoops2;
+    return standardStars
+        + (capturePuzzle && capturePuzzle.completed ? captureLoopLevelStars[0] : 0)
+        + (capturePuzzle2 && capturePuzzle2.completed ? captureLoopLevelStars[1] : 0);
 }
 
 function getCandyBalance() {
@@ -665,7 +676,7 @@ function formatCandies(amount) {
 }
 
 function updateStarDisplay() {
-    const stars = captureMode ? captureLoopStars : (puzzleStars[currentPuzzle] ?? 0);
+    const stars = captureMode ? captureLoopLevelStars[captureLoopLevel] : (puzzleStars[currentPuzzle] ?? 0);
     levelStarsElement.textContent = `⭐ ${stars}`;
     totalStarsElement.textContent = `🍬 ${formatCandies(getCandyBalance())}`;
     maxCandiesElement.textContent = `🟤 ${getTotalStars()}`;
@@ -766,7 +777,7 @@ function getMarkerType(marker) {
     return "open";
 }
 
-function progressPuzzleKey() { return captureMode ? "captureLoops" : String(currentPuzzle); }
+function progressPuzzleKey() { return captureMode ? (captureLoopLevel === 0 ? "captureLoops" : "captureLoops2") : String(currentPuzzle); }
 
 function getPuzzleProgress() {
     const saved = progress.puzzles[progressPuzzleKey()];
@@ -1006,12 +1017,21 @@ function createBoard() {
     setupCellEvents();
 }
 
-const captureLoops = [
-    ["A2", "A3", "C1", "C4", "A2"],
-    ["B1", "C2", "B4", "A3", "B1"],
-    ["A2", "D2", "C3", "B2", "A2"],
-    ["B2", "B4", "D3", "B3", "B2"],
-    ["B4", "D4", "D1", "C2", "B4"]
+const captureLoopsByLevel = [
+    [
+        ["A2", "A3", "C1", "C4", "A2"],
+        ["B1", "C2", "B4", "A3", "B1"],
+        ["A2", "D2", "C3", "B2", "A2"],
+        ["B2", "B4", "D3", "B3", "B2"],
+        ["B4", "D4", "D1", "C2", "B4"]
+    ],
+    [
+        ["A1", "B2", "D2", "C3", "A1"],
+        ["B1", "B3", "B4", "A2", "B1"],
+        ["C1", "D3", "C4", "B3", "C1"],
+        ["D1", "B3", "A3", "C2", "D1"],
+        ["B3", "C2", "B4", "D4", "B3"]
+    ]
 ];
 function coordinatePoint(coord) {
     const col = coord.charCodeAt(0) - 65;
@@ -1021,7 +1041,7 @@ function coordinatePoint(coord) {
 function renderCaptureLoops() {
     const host = document.getElementById("loopCards");
     host.innerHTML = "";
-    captureLoops.forEach((loop, loopIndex) => {
+    captureLoopsByLevel[captureLoopLevel].forEach((loop, loopIndex) => {
         const card = document.createElement("section");
         card.className = "loop-card";
         const heading = document.createElement("h3");
@@ -1065,7 +1085,8 @@ function setGameMode(useCaptureMode) {
         saveCurrentPuzzle();
         puzzleBeforeCapture = currentPuzzle;
         captureMode = true;
-        currentPuzzle = 2; // This mode uses the third puzzle's grouping solution.
+        captureLoopLevel = 0;
+        currentPuzzle = 2; // Capture loops mode uses the third puzzle's grouping solution.
     }
     document.body.classList.toggle("capture-mode", captureMode);
     document.getElementById("standardMode").classList.toggle("active", !captureMode);
@@ -1073,19 +1094,21 @@ function setGameMode(useCaptureMode) {
     document.getElementById("captureCounts").style.display = captureMode ? "flex" : "none";
     document.getElementById("captureLayout").style.display = captureMode ? "block" : "none";
     document.getElementById("captureNote").style.display = captureMode ? "block" : "none";
-    document.querySelector(".subtitle").textContent = captureMode ? "Deduce the pieces. Group the squares." : "Create groups of four!";
+    document.querySelector(".subtitle").textContent = captureMode
+        ? `Capture loops — Level ${captureLoopLevel + 1}: Deduce the pieces. Group the squares.`
+        : "Create groups of four!";
     renderCaptureLoops();
     prepareNewPuzzle();
 }
 document.getElementById("standardMode").addEventListener("click", () => setGameMode(false));
 document.getElementById("captureModeButton").addEventListener("click", () => setGameMode(true));
 
-const capturePieceTotals = { C: 7, A: 4, B: 3, D: 2 };
+function getCapturePieceTotals() { return captureLevelPieceTotals[captureLoopLevel]; }
 function updateCaptureCounts() {
     const placed = [...getCells()].map(cell => cell.dataset.pieceType || null);
     document.querySelectorAll(".capture-count").forEach(button => {
         const type = button.dataset.piece;
-        const remaining = capturePieceTotals[type] - placed.filter(piece => piece === type).length;
+        const remaining = getCapturePieceTotals()[type] - placed.filter(piece => piece === type).length;
         button.querySelector("b").textContent = String(remaining);
         button.classList.toggle("selected", captureMode && selectedTool === `piece-${type}`);
         button.setAttribute("aria-pressed", String(captureMode && selectedTool === `piece-${type}`));
@@ -1549,7 +1572,10 @@ function checkAnswer() {
         for (let group = 0; group < 4; group++) {
             if (usedAnswerGroups.has(group)) continue;
 
-            const answerCells = answers[currentPuzzle]
+            const activeAnswer = captureMode && captureLoopLevel === 1
+                ? captureLevel2Solution
+                : answers[currentPuzzle];
+            const answerCells = activeAnswer
                 .map((letter, index) =>
                     letter === String.fromCharCode(65 + group) ? index : -1
                 )
@@ -1659,7 +1685,7 @@ window.addEventListener("resize", () => {
 
 function completePuzzle(save = true) {
     const previousTotal = getCandyBalance();
-    const starsEarned = captureMode ? captureLoopStars : (puzzleStars[currentPuzzle] || 0);
+    const starsEarned = captureMode ? captureLoopLevelStars[captureLoopLevel] : (puzzleStars[currentPuzzle] || 0);
 
     puzzleCompleted = true;
     dragging = false;
@@ -1720,7 +1746,18 @@ function unlockPuzzle() {
 }
 
 document.getElementById("nextPuzzle").addEventListener("click", () => {
-    if (captureMode) return;
+    if (captureMode) {
+        if (captureLoopLevel < 1) {
+            saveCurrentPuzzle();
+            captureLoopLevel++;
+            document.querySelector(".subtitle").textContent = `Capture loops — Level ${captureLoopLevel + 1}: Deduce the pieces. Group the squares.`;
+            renderCaptureLoops();
+            prepareNewPuzzle();
+        } else {
+            endMessage.style.display = "block";
+        }
+        return;
+    }
     if (currentPuzzle < puzzles.length - 1) {
         saveCurrentPuzzle();
 
@@ -1737,7 +1774,16 @@ document.getElementById("nextPuzzle").addEventListener("click", () => {
 });
 
 document.getElementById("previousPuzzle").addEventListener("click", () => {
-    if (captureMode) return;
+    if (captureMode) {
+        if (captureLoopLevel > 0) {
+            saveCurrentPuzzle();
+            captureLoopLevel--;
+            document.querySelector(".subtitle").textContent = `Capture loops — Level ${captureLoopLevel + 1}: Deduce the pieces. Group the squares.`;
+            renderCaptureLoops();
+            prepareNewPuzzle();
+        }
+        return;
+    }
     if (currentPuzzle === 0) return;
 
     saveCurrentPuzzle();
