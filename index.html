@@ -76,6 +76,11 @@ body.capture-mode .cell .piece { width:58%; height:58%; }
 .capture-note { color:#666; font-size:13px; margin:0 auto 16px; max-width:720px; }
 body.capture-mode .capture-board-area { gap:24px; }
 body.capture-mode .board { gap:4px; }
+body.chaos-mode .board { grid-template-columns:repeat(5, clamp(48px, 14vw, 92px)); grid-template-rows:repeat(5, clamp(48px, 14vw, 92px)); }
+body.chaos-mode .cell { border-radius:6px; }
+body.chaos-mode .colors, body.chaos-mode .tools { display:flex; }
+body.chaos-mode .capture-board-area { gap:0; }
+body.chaos-mode .capture-counts, body.chaos-mode #captureLayout, body.chaos-mode #captureNote { display:none !important; }
 body.capture-mode .cell { cursor:pointer; }
 @media (max-width:850px) { .loop-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } .loop-grid { width:clamp(165px, 28vw, 220px); } }
 @media (max-width:600px) { .capture-board-area { flex-direction:column; gap:10px; width:100%; } .capture-counts { width:100%; flex-basis:auto; flex-direction:row; flex-wrap:wrap; gap:6px; } .capture-count { padding:6px 8px; gap:4px; font-size:13px; } .capture-count img { width:20px; height:20px; } .loop-cards { grid-template-columns:1fr; gap:14px; } .loop-grid { width:min(100%, 240px); } .loop-card { padding:12px; } .loop-card h3 { font-size:13px; } }
@@ -159,6 +164,10 @@ body.capture-mode .cell { cursor:pointer; }
 }
 
 .cell:hover { border-color: #aaa; }
+.queen-half { position:absolute; inset:0; pointer-events:none; border-radius:inherit; }
+.queen-half.top-left { clip-path:polygon(0 0,100% 0,0 100%); }
+.queen-half.bottom-right { clip-path:polygon(100% 0,100% 100%,0 100%); }
+body.chaos-mode .cell.queen-cell { cursor:crosshair; }
 
 .piece {
     width: 62%;
@@ -420,6 +429,7 @@ body.pulse-tiles .cell:hover { animation: tile-pulse .65s ease-in-out infinite a
 <div class="mode-picker" aria-label="Game mode">
     <button class="mode-button active" id="standardMode">Standard</button>
     <button class="mode-button" id="captureModeButton">Connect 5?</button>
+    <button class="mode-button" id="chaosModeButton">Chaos</button>
 </div>
 <p class="capture-note" id="captureNote" style="display:none">Fill in the pieces using the 5 possible groups. Then solve it as a standard puzzle.</p>
 
@@ -520,6 +530,32 @@ const answers = [
     ["A","B","C","A","D","C","D","B","B","D","A","C","A","B","D","C"]
 ];
 
+/* CHAOS LEVELS: voeg hier levels en bijbehorende oplossingen toe.
+   pieces = 25 vakjes, rij voor rij; A=knight, B=bishop, C=rook, D=pawn, E=queen.
+   solution = 25 groepslabels (alleen data; Chaos-regels worden hier niet gecontroleerd).
+*/
+const chaosLevels = [
+    {
+        name: "Level 1",
+        pieces: ["C","B","B","B","B",
+                 "C","D","C","B","A",
+                 "B","C","E","D","A",
+                 "B","A","A","C","B",
+                 "D","D","D","A","C"],
+        solution: ["A","A","A","B","C",
+             "A","A","D","C","A",
+             "D","B","C/D","D","B",
+             "B","C","B","D","D",
+             "C","B","D","C","C"], // Groepen A(6), B(6), C(7) en D(7)
+        slashes: ["","B","","","",
+                 "","","","","A",
+                 "","A","A","","B",
+                 "","","","","B",
+                 "","","","","B"], // A zwart, B grijs
+        stars: 15
+    }
+];
+
 /*
 Slashconfiguratie:
 A = zwarte slash
@@ -551,6 +587,9 @@ const STORAGE_KEY = "forkedUpProgress_v1";
 let currentPuzzle = 0;
 let puzzleCompleted = false;
 let captureMode = false;
+let chaosMode = false;
+let chaosLevel = 0;
+let captureLoopLevel = 0;
 let puzzleBeforeCapture = 0;
 let progress;
 
@@ -603,15 +642,37 @@ function loadProgress() {
 
 progress = loadProgress();
 currentPuzzle = progress.currentPuzzle;
+chaosMode = progress.activeMode === "chaos";
+captureMode = progress.activeMode === "capture";
+chaosLevel = Number.isInteger(progress.chaosLevel) ? Math.max(0, Math.min(chaosLevels.length - 1, progress.chaosLevel)) : 0;
+captureLoopLevel = Number.isInteger(progress.captureLoopLevel) ? Math.max(0, Math.min(1, progress.captureLoopLevel)) : 0;
+puzzleBeforeCapture = Number.isInteger(progress.puzzleBeforeCapture)
+    ? Math.max(0, Math.min(puzzles.length - 1, progress.puzzleBeforeCapture))
+    : currentPuzzle;
+if (captureMode) currentPuzzle = 2;
 
 function saveProgress() {
     try {
         progress.currentPuzzle = currentPuzzle;
+        progress.activeMode = chaosMode ? "chaos" : captureMode ? "capture" : "standard";
+        progress.chaosLevel = chaosLevel;
+        progress.captureLoopLevel = captureLoopLevel;
+        progress.puzzleBeforeCapture = puzzleBeforeCapture;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
     } catch (error) {
         console.warn("Could not save Forked Up progress.", error);
     }
 }
+
+// Extra safety net: keep the current board and notes when the tab closes or reloads.
+window.addEventListener("pagehide", () => {
+    try {
+        saveCurrentPuzzle();
+        saveProgress();
+    } catch (error) {
+        console.warn("Could not save the current Forked Up board.", error);
+    }
+});
 
 const levelStarsElement = document.getElementById("levelStars");
 const totalStarsElement = document.getElementById("totalStars");
@@ -626,7 +687,8 @@ const pieces = {
     A: "https://lichess1.org/assets/piece/rhosgfx/wN.svg",
     B: "https://lichess1.org/assets/piece/rhosgfx/wB.svg",
     C: "https://lichess1.org/assets/piece/rhosgfx/wR.svg",
-    D: "https://lichess1.org/assets/piece/rhosgfx/wP.svg"
+    D: "https://lichess1.org/assets/piece/rhosgfx/wP.svg",
+    E: "https://lichess1.org/assets/piece/rhosgfx/wQ.svg"
 };
 
 let colors = {
@@ -647,7 +709,6 @@ let dragCurrent = null;
 
 const captureLoopStars = 5;
 const captureLoopLevelStars = [5, 8];
-let captureLoopLevel = 0;
 const captureLevelPieceTotals = [
     { C: 7, A: 4, B: 3, D: 2 },
     { C: 4, A: 5, B: 4, D: 3 }
@@ -660,7 +721,8 @@ function getTotalStars() {
     }, 0);
     const capturePuzzle = progress.puzzles.captureLoops;
     const capturePuzzle2 = progress.puzzles.captureLoops2;
-    return standardStars
+    const chaosStars = chaosLevels.reduce((total, level, index) => total + (progress.puzzles[`chaos-${index}`]?.completed ? (level.stars || 0) : 0), 0);
+    return standardStars + chaosStars
         + (capturePuzzle && capturePuzzle.completed ? captureLoopLevelStars[0] : 0)
         + (capturePuzzle2 && capturePuzzle2.completed ? captureLoopLevelStars[1] : 0);
 }
@@ -676,7 +738,7 @@ function formatCandies(amount) {
 }
 
 function updateStarDisplay() {
-    const stars = captureMode ? captureLoopLevelStars[captureLoopLevel] : (puzzleStars[currentPuzzle] ?? 0);
+    const stars = chaosMode ? (chaosLevels[chaosLevel]?.stars || 0) : captureMode ? captureLoopLevelStars[captureLoopLevel] : (puzzleStars[currentPuzzle] ?? 0);
     levelStarsElement.textContent = `⭐ ${stars}`;
     totalStarsElement.textContent = `🍬 ${formatCandies(getCandyBalance())}`;
     maxCandiesElement.textContent = `🟤 ${getTotalStars()}`;
@@ -777,28 +839,28 @@ function getMarkerType(marker) {
     return "open";
 }
 
-function progressPuzzleKey() { return captureMode ? (captureLoopLevel === 0 ? "captureLoops" : "captureLoops2") : String(currentPuzzle); }
+function progressPuzzleKey() { return chaosMode ? `chaos-${chaosLevel}` : (captureMode ? (captureLoopLevel === 0 ? "captureLoops" : "captureLoops2") : String(currentPuzzle)); }
 
 function getPuzzleProgress() {
     const saved = progress.puzzles[progressPuzzleKey()];
 
     if (!saved || typeof saved !== "object") {
         return {
-            fills: Array(16).fill(null),
-            markers: Array.from({ length: 16 }, () => []),
+            fills: Array(chaosMode ? 25 : 16).fill(null),
+            markers: Array.from({ length: chaosMode ? 25 : 16 }, () => []),
             arrows: [],
-            placedPieces: Array(16).fill(null),
+            placedPieces: Array(chaosMode ? 25 : 16).fill(null),
             completed: false
         };
     }
 
     return {
-        fills: Array.isArray(saved.fills) ? saved.fills : Array(16).fill(null),
+        fills: Array.isArray(saved.fills) ? saved.fills : Array(chaosMode ? 25 : 16).fill(null),
         markers: Array.isArray(saved.markers)
             ? saved.markers
-            : Array.from({ length: 16 }, () => []),
+            : Array.from({ length: chaosMode ? 25 : 16 }, () => []),
         arrows: Array.isArray(saved.arrows) ? saved.arrows : [],
-        placedPieces: Array.isArray(saved.placedPieces) ? saved.placedPieces : Array(16).fill(null),
+        placedPieces: Array.isArray(saved.placedPieces) ? saved.placedPieces : Array(chaosMode ? 25 : 16).fill(null),
         completed: saved.completed === true
     };
 }
@@ -806,10 +868,10 @@ function getPuzzleProgress() {
 function saveCurrentPuzzle() {
     if (puzzleCompleted) {
         progress.puzzles[progressPuzzleKey()] = {
-            fills: Array(16).fill(null),
-            markers: Array.from({ length: 16 }, () => []),
+            fills: Array(chaosMode ? 25 : 16).fill(null),
+            markers: Array.from({ length: chaosMode ? 25 : 16 }, () => []),
             arrows: [],
-            placedPieces: Array(16).fill(null),
+            placedPieces: Array(chaosMode ? 25 : 16).fill(null),
             completed: true
         };
         saveProgress();
@@ -852,10 +914,15 @@ function applySavedPuzzleState() {
         const fillColor = saved.fills[index] || null;
         cell.dataset.fillColor = fillColor || "";
 
-        cell.style.background =
-            fillColor && colors[fillColor]
-                ? colors[fillColor].fill
-                : "var(--empty-cell, #fafafa)";
+        if (chaosMode && cell.classList.contains("queen-cell")) {
+            const [leftColor, rightColor] = (fillColor || "/").split("/");
+            cell.style.background = "var(--empty-cell, #fafafa)";
+            const halves = cell.querySelectorAll(".queen-half");
+            if (halves[0]) halves[0].style.background = colors[leftColor]?.fill || "transparent";
+            if (halves[1]) halves[1].style.background = colors[rightColor]?.fill || "transparent";
+        } else {
+            cell.style.background = fillColor && colors[fillColor] ? colors[fillColor].fill : "var(--empty-cell, #fafafa)";
+        }
 
         cell.dataset.pieceType = "";
         const oldPlacedPiece = cell.querySelector(".placed-piece");
@@ -920,7 +987,9 @@ function applySavedPuzzleState() {
 
 function getSlashType(index) {
     if (captureMode) return "";
-    const levelSlashes = slashes[currentPuzzle] || [];
+    const levelSlashes = chaosMode
+        ? (chaosLevels[chaosLevel]?.slashes || [])
+        : (slashes[currentPuzzle] || []);
     return levelSlashes[index] || null;
 }
 
@@ -928,7 +997,9 @@ function getSlashGroup(index) {
     const group = getSlashType(index);
     if (!group) return [];
 
-    const levelSlashes = slashes[currentPuzzle] || [];
+    const levelSlashes = chaosMode
+        ? (chaosLevels[chaosLevel]?.slashes || [])
+        : (slashes[currentPuzzle] || []);
 
     return levelSlashes
         .map((slash, cellIndex) => slash === group ? cellIndex : -1)
@@ -952,7 +1023,9 @@ function hasSlashColorConflict(cellIndex, color) {
 }
 
 function checkSlashRules(cells) {
-    const levelSlashes = slashes[currentPuzzle] || [];
+    const levelSlashes = chaosMode
+        ? (chaosLevels[chaosLevel]?.slashes || [])
+        : (slashes[currentPuzzle] || []);
 
     for (let i = 0; i < levelSlashes.length; i++) {
         const group = levelSlashes[i];
@@ -980,7 +1053,8 @@ function checkSlashRules(cells) {
 function createBoard() {
     document.querySelectorAll(".cell").forEach(cell => cell.remove());
 
-    puzzles[currentPuzzle].forEach((pieceType, index) => {
+    const boardPieces = chaosMode ? (chaosLevels[chaosLevel]?.pieces || []) : puzzles[currentPuzzle];
+    boardPieces.forEach((pieceType, index) => {
         const cell = document.createElement("div");
         cell.className = "cell";
         cell.dataset.index = index;
@@ -991,6 +1065,16 @@ function createBoard() {
             img.src = pieces[pieceType];
             img.alt = pieceType;
             cell.appendChild(img);
+        }
+        if (chaosMode && pieceType === "E") {
+            cell.classList.add("queen-cell");
+            const firstHalf = document.createElement("div");
+            firstHalf.className = "queen-half top-left";
+            firstHalf.dataset.half = "top-left";
+            const secondHalf = document.createElement("div");
+            secondHalf.className = "queen-half bottom-right";
+            secondHalf.dataset.half = "bottom-right";
+            cell.append(firstHalf, secondHalf);
         }
 
         const markers = document.createElement("div");
@@ -1076,6 +1160,7 @@ function renderCaptureLoops() {
     });
 }
 function setGameMode(useCaptureMode) {
+    if (chaosMode) return;
     if (captureMode === useCaptureMode) return;
     if (captureMode) {
         saveCurrentPuzzle();
@@ -1091,6 +1176,9 @@ function setGameMode(useCaptureMode) {
     document.body.classList.toggle("capture-mode", captureMode);
     document.getElementById("standardMode").classList.toggle("active", !captureMode);
     document.getElementById("captureModeButton").classList.toggle("active", captureMode);
+    document.getElementById("chaosModeButton").classList.toggle("active", false);
+    document.getElementById("submitPuzzle").style.display = "";
+    document.getElementById("nextPuzzle").textContent = "Next puzzle →";
     document.getElementById("captureCounts").style.display = captureMode ? "flex" : "none";
     document.getElementById("captureLayout").style.display = captureMode ? "block" : "none";
     document.getElementById("captureNote").style.display = captureMode ? "block" : "none";
@@ -1098,10 +1186,44 @@ function setGameMode(useCaptureMode) {
         ? `Capture loops — Level ${captureLoopLevel + 1}: Deduce the pieces. Group the squares.`
         : "Create groups of four!";
     renderCaptureLoops();
+    saveProgress();
     prepareNewPuzzle();
 }
-document.getElementById("standardMode").addEventListener("click", () => setGameMode(false));
-document.getElementById("captureModeButton").addEventListener("click", () => setGameMode(true));
+document.getElementById("standardMode").addEventListener("click", () => {
+    if (chaosMode) setChaosMode(false);
+    setGameMode(false);
+});
+document.getElementById("captureModeButton").addEventListener("click", () => {
+    if (chaosMode) setChaosMode(false);
+    setGameMode(true);
+});
+document.getElementById("chaosModeButton").addEventListener("click", () => {
+    if (captureMode) setGameMode(false);
+    setChaosMode(true);
+});
+
+function setChaosMode(enabled) {
+    if (chaosMode === enabled) return;
+    if (enabled) {
+        if (!captureMode) saveCurrentPuzzle();
+        chaosMode = true;
+        chaosLevel = 0;
+    } else {
+        chaosMode = false;
+    }
+    document.body.classList.toggle("chaos-mode", chaosMode);
+    document.getElementById("standardMode").classList.toggle("active", !captureMode && !chaosMode);
+    document.getElementById("captureModeButton").classList.toggle("active", captureMode);
+    document.getElementById("chaosModeButton").classList.toggle("active", chaosMode);
+    document.getElementById("captureCounts").style.display = captureMode ? "flex" : "none";
+    document.getElementById("captureLayout").style.display = captureMode ? "block" : "none";
+    document.getElementById("captureNote").style.display = captureMode ? "block" : "none";
+    document.getElementById("submitPuzzle").style.display = "";
+    document.getElementById("nextPuzzle").textContent = chaosMode ? "Next Chaos level →" : "Next puzzle →";
+    document.querySelector(".subtitle").textContent = chaosMode ? `Chaos — ${chaosLevels[chaosLevel]?.name || `Level ${chaosLevel + 1}`}` : "Create groups of four!";
+    saveProgress();
+    prepareNewPuzzle();
+}
 
 function getCapturePieceTotals() { return captureLevelPieceTotals[captureLoopLevel]; }
 function updateCaptureCounts() {
@@ -1129,7 +1251,7 @@ document.querySelectorAll(".capture-count").forEach(button => {
 
 function setupCellEvents() {
     getCells().forEach(cell => {
-        cell.addEventListener("click", () => {
+        cell.addEventListener("click", event => {
             if (puzzleCompleted) return;
 
             if (cell.dataset.skipClick === "true") {
@@ -1158,6 +1280,21 @@ function setupCellEvents() {
                 }
                 resultMessage.textContent = "";
                 updateCaptureCounts();
+                saveCurrentPuzzle();
+                return;
+            }
+
+            if (chaosMode && cell.classList.contains("queen-cell")) {
+                const rect = cell.getBoundingClientRect();
+                const halfName = (event.clientX - rect.left) / rect.width + (event.clientY - rect.top) / rect.height <= 1 ? "top-left" : "bottom-right";
+                const halves = [...cell.querySelectorAll(".queen-half")];
+                const half = halves.find(item => item.dataset.half === halfName);
+                const current = (cell.dataset.fillColor || "/").split("/");
+                const slot = halfName === "top-left" ? 0 : 1;
+                current[slot] = current[slot] === selectedColor ? "" : selectedColor;
+                cell.dataset.fillColor = current.join("/");
+                half.style.background = colors[current[slot]]?.fill || "transparent";
+                resultMessage.textContent = "";
                 saveCurrentPuzzle();
                 return;
             }
@@ -1522,9 +1659,18 @@ function prepareNewPuzzle() {
 
     arrows = [];
     createBoard();
-    applySavedPuzzleState();
+    if (chaosMode) {
+        document.getElementById("previousPuzzle").disabled = chaosLevel === 0;
+        document.getElementById("nextPuzzle").textContent = "Next Chaos level →";
+        document.querySelector(".subtitle").textContent = `Chaos — ${chaosLevels[chaosLevel]?.name || `Level ${chaosLevel + 1}`}`;
+        applySavedPuzzleState();
+    } else {
+        document.getElementById("previousPuzzle").disabled = false;
+        applySavedPuzzleState();
+    }
     updateCaptureCounts();
     applyShopAppearance();
+    saveProgress();
 }
 
 /* ANSWER CHECKING */
@@ -1540,6 +1686,43 @@ function arraysEqual(a, b) {
 
 function checkAnswer() {
     if (puzzleCompleted) return;
+
+    if (chaosMode) {
+        const cells = [...getCells()];
+        const level = chaosLevels[chaosLevel];
+        if (cells.some((cell, i) => i === 12
+            ? (cell.dataset.fillColor || "").split("/").filter(Boolean).length !== 2
+            : !cell.dataset.fillColor)) {
+            resultMessage.textContent = "Kleur alle vakjes. De koningin moet twee kleuren hebben.";
+            return;
+        }
+        const expected = level.solution;
+        // The queen's two colors are an unordered pair: either diagonal may
+        // represent either of the two shared groups.
+        const validateQueenOrder = swapQueenColors => {
+            let valid = true;
+            const groupColors = {};
+            for (const group of ["A", "B", "C", "D"]) {
+                const indices = expected.map((g, i) => g.split("/").includes(group) ? i : -1).filter(i => i >= 0);
+                if (indices.length !== ({A:6,B:6,C:7,D:7})[group]) valid = false;
+                for (const i of indices) {
+                    const parts = (cells[i].dataset.fillColor || "").split("/");
+                    let color = cells[i].dataset.fillColor;
+                    if (i === 12) {
+                        const queenSlotForGroup = group === "C" ? 0 : 1;
+                        const queenSlot = swapQueenColors ? 1 - queenSlotForGroup : queenSlotForGroup;
+                        color = parts[queenSlot] || "";
+                    }
+                    if (!color || (groupColors[group] && groupColors[group] !== color)) valid = false;
+                    groupColors[group] = color;
+                }
+            }
+            if (new Set(Object.values(groupColors)).size !== 4) valid = false;
+            return valid;
+        };
+        if (validateQueenOrder(false) || validateQueenOrder(true)) completePuzzle(true); else showIncorrect();
+        return;
+    }
 
     if (!allCellsColored()) {
         resultMessage.textContent = "Color all 16 squares before submitting.";
@@ -1685,7 +1868,7 @@ window.addEventListener("resize", () => {
 
 function completePuzzle(save = true) {
     const previousTotal = getCandyBalance();
-    const starsEarned = captureMode ? captureLoopLevelStars[captureLoopLevel] : (puzzleStars[currentPuzzle] || 0);
+    const starsEarned = chaosMode ? (chaosLevels[chaosLevel]?.stars || 0) : captureMode ? captureLoopLevelStars[captureLoopLevel] : (puzzleStars[currentPuzzle] || 0);
 
     puzzleCompleted = true;
     dragging = false;
@@ -1697,9 +1880,8 @@ function completePuzzle(save = true) {
 
     getCells().forEach(cell => {
         cell.querySelector(".markers").innerHTML = "";
-        cell.style.background = progress.shop.tileColorsUnlocked
-            ? progress.shop.solvedCellColor
-            : "var(--solved-cell, #e8dcc5)";
+        cell.style.background = progress.shop.tileColorsUnlocked ? progress.shop.solvedCellColor : "var(--solved-cell, #e8dcc5)";
+        cell.querySelectorAll(".queen-half").forEach(half => half.style.background = "transparent");
         cell.dataset.fillColor = "";
     });
 
@@ -1714,10 +1896,10 @@ function completePuzzle(save = true) {
 
     if (save) {
         progress.puzzles[progressPuzzleKey()] = {
-            fills: Array(16).fill(null),
-            markers: Array.from({ length: 16 }, () => []),
+            fills: Array(chaosMode ? 25 : 16).fill(null),
+            markers: Array.from({ length: chaosMode ? 25 : 16 }, () => []),
             arrows: [],
-            placedPieces: Array(16).fill(null),
+            placedPieces: Array(chaosMode ? 25 : 16).fill(null),
             completed: true
         };
 
@@ -1746,6 +1928,16 @@ function unlockPuzzle() {
 }
 
 document.getElementById("nextPuzzle").addEventListener("click", () => {
+    if (chaosMode) {
+        if (chaosLevel < chaosLevels.length - 1) {
+            chaosLevel++;
+            prepareNewPuzzle();
+        } else {
+            endMessage.textContent = "You've reached the end of Chaos levels.";
+            endMessage.style.display = "block";
+        }
+        return;
+    }
     if (captureMode) {
         if (captureLoopLevel < 1) {
             saveCurrentPuzzle();
@@ -1774,6 +1966,13 @@ document.getElementById("nextPuzzle").addEventListener("click", () => {
 });
 
 document.getElementById("previousPuzzle").addEventListener("click", () => {
+    if (chaosMode) {
+        if (chaosLevel > 0) {
+            chaosLevel--;
+            prepareNewPuzzle();
+        }
+        return;
+    }
     if (captureMode) {
         if (captureLoopLevel > 0) {
             saveCurrentPuzzle();
@@ -2074,6 +2273,22 @@ document.getElementById("backgroundUpload").addEventListener("change", event => 
 
 /* START */
 
+document.body.classList.toggle("capture-mode", captureMode);
+document.body.classList.toggle("chaos-mode", chaosMode);
+document.getElementById("standardMode").classList.toggle("active", !captureMode && !chaosMode);
+document.getElementById("captureModeButton").classList.toggle("active", captureMode);
+document.getElementById("chaosModeButton").classList.toggle("active", chaosMode);
+document.getElementById("captureCounts").style.display = captureMode ? "flex" : "none";
+document.getElementById("captureLayout").style.display = captureMode ? "block" : "none";
+document.getElementById("captureNote").style.display = captureMode ? "block" : "none";
+document.getElementById("nextPuzzle").textContent = chaosMode ? "Next Chaos level →" : "Next puzzle →";
+document.getElementById("previousPuzzle").disabled = chaosMode ? chaosLevel === 0 : captureMode ? captureLoopLevel === 0 : currentPuzzle === 0;
+document.querySelector(".subtitle").textContent = chaosMode
+    ? `Chaos — ${chaosLevels[chaosLevel]?.name || `Level ${chaosLevel + 1}`}`
+    : captureMode
+        ? `Capture loops — Level ${captureLoopLevel + 1}: Deduce the pieces. Group the squares.`
+        : "Create groups of four!";
+renderCaptureLoops();
 createBoard();
 applySavedPuzzleState();
 applyShopAppearance();
