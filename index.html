@@ -421,6 +421,7 @@ body.pulse-tiles .cell:hover { animation: tile-pulse .65s ease-in-out infinite a
         <div class="star-title">Total</div>
         <div class="star-value" id="totalStars">🍬 0</div>
         <div class="star-value max-candies" id="maxCandies">🟤 0</div>
+        <div class="star-title" id="maxCandiesLabel" style="display:none; text-align:right;">max</div>
     </div>
 </div>
 
@@ -742,6 +743,12 @@ function updateStarDisplay() {
     levelStarsElement.textContent = `⭐ ${stars}`;
     totalStarsElement.textContent = `🍬 ${formatCandies(getCandyBalance())}`;
     maxCandiesElement.textContent = `🟤 ${getTotalStars()}`;
+    // Show "max" only after every available puzzle across all modes is completed.
+    const allStandardCompleted = puzzles.every((_, index) => progress.puzzles[String(index)]?.completed === true);
+    const allCaptureCompleted = progress.puzzles.captureLoops?.completed === true && progress.puzzles.captureLoops2?.completed === true;
+    const allChaosCompleted = chaosLevels.every((_, index) => progress.puzzles[`chaos-${index}`]?.completed === true);
+    const maxCandiesLabel = document.getElementById("maxCandiesLabel");
+    if (maxCandiesLabel) maxCandiesLabel.style.display = allStandardCompleted && allCaptureCompleted && allChaosCompleted ? "block" : "none";
     const balance = document.getElementById("shopBalance");
     if (balance) balance.textContent = `🍬 ${formatCandies(getCandyBalance())} / ${formatCandies(getTotalStars())}`;
 }
