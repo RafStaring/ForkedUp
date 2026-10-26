@@ -985,11 +985,22 @@ function applySavedPuzzleState() {
    Cells in the same group may not have the same fill color.
 */
 
+function getLevelSlashArray() {
+    if (chaosMode) return chaosLevels[chaosLevel]?.slashes || [];
+    if (captureMode && captureLoopLevel === 1) {
+        // Capture Loops level 2: B3 and D3 have matching black slashes,
+        // but distinct group labels so they must have different fill colors.
+        const captureSlashes = Array(16).fill("");
+        captureSlashes[9] = "A";  // B3
+        captureSlashes[11] = "C"; // D3
+        return captureSlashes;
+    }
+    if (captureMode) return [];
+    return slashes[currentPuzzle] || [];
+}
+
 function getSlashType(index) {
-    if (captureMode) return "";
-    const levelSlashes = chaosMode
-        ? (chaosLevels[chaosLevel]?.slashes || [])
-        : (slashes[currentPuzzle] || []);
+    const levelSlashes = getLevelSlashArray();
     return levelSlashes[index] || null;
 }
 
@@ -997,9 +1008,7 @@ function getSlashGroup(index) {
     const group = getSlashType(index);
     if (!group) return [];
 
-    const levelSlashes = chaosMode
-        ? (chaosLevels[chaosLevel]?.slashes || [])
-        : (slashes[currentPuzzle] || []);
+    const levelSlashes = getLevelSlashArray();
 
     return levelSlashes
         .map((slash, cellIndex) => slash === group ? cellIndex : -1)
@@ -1010,36 +1019,41 @@ function getCellColor(cell) {
     return cell.dataset.fillColor || null;
 }
 
-function hasSlashColorConflict(cellIndex, color) {
-    const group = getSlashGroup(cellIndex);
-    if (group.length === 0) return false;
+function areSlashColorsConflicting(indexA, indexB) {
+    const levelSlashes = getLevelSlashArray();
+    const groupA = levelSlashes[indexA];
+    const groupB = levelSlashes[indexB];
 
+    // Same-letter slash groups conflict as usual. In Capture Loops level 2,
+    // B3 (index 9) and D3 (index 11) also conflict with each other even
+    // though their black slashes have distinct group labels.
+    const captureLevelTwoPair = captureMode && captureLoopLevel === 1 &&
+        ((indexA === 9 && indexB === 11) || (indexA === 11 && indexB === 9));
+
+    return (!!groupA && groupA === groupB) || captureLevelTwoPair;
+}
+
+function hasSlashColorConflict(cellIndex, color) {
     const cells = [...getCells()];
 
-    return group.some(otherIndex => {
+    return cells.some((cell, otherIndex) => {
         if (otherIndex === cellIndex) return false;
-        return getCellColor(cells[otherIndex]) === color;
+        if (!areSlashColorsConflicting(cellIndex, otherIndex)) return false;
+        return getCellColor(cell) === color;
     });
 }
 
 function checkSlashRules(cells) {
-    const levelSlashes = chaosMode
-        ? (chaosLevels[chaosLevel]?.slashes || [])
-        : (slashes[currentPuzzle] || []);
-
-    for (let i = 0; i < levelSlashes.length; i++) {
-        const group = levelSlashes[i];
-        if (!group) continue;
-
-        for (let j = i + 1; j < levelSlashes.length; j++) {
-            if (levelSlashes[j] !== group) continue;
+    for (let i = 0; i < cells.length; i++) {
+        for (let j = i + 1; j < cells.length; j++) {
+            if (!areSlashColorsConflicting(i, j)) continue;
 
             const colorA = getCellColor(cells[i]);
             const colorB = getCellColor(cells[j]);
 
             if (colorA && colorB && colorA === colorB) {
                 resultMessage.textContent =
-                    ``;
+                    "De twee zwarte slashes op B3 en D3 moeten verschillende kleuren hebben.";
                 return false;
             }
         }
