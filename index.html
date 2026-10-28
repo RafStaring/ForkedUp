@@ -562,11 +562,11 @@ const chaosLevels = [
                  "B","D","A","A","D",
                  "B","B","B","D","C",
                  "A","C","A","C","E"],
-        solution: ["A","A","B","B","C",
-                 "D","B","A","C","B",
-                 "A","A","C","B","C",
-                 "D","D","D","C","B",
-                 "D","D","A","C","B/C"],
+        solution = ["A","A","D","D","C",
+                    "B","D","A","C","D",
+                    "A","A","C","D","C",
+                    "B","B","B","C","D",
+                    "B","B","A","C","C/D"],
         slashes: ["","","","","",
                  "","","","","",
                  "","A","B","","",
@@ -1726,6 +1726,7 @@ function arraysEqual(a, b) {
 
 function checkAnswer() {
     if (puzzleCompleted) return;
+
     if (chaosMode) {
         const cells = [...getCells()];
         const level = chaosLevels[chaosLevel];
@@ -1743,94 +1744,7 @@ function checkAnswer() {
             const groupColors = {};
             for (const group of ["A", "B", "C", "D"]) {
                 const indices = expected.map((g, i) => g.split("/").includes(group) ? i : -1).filter(i => i >= 0);
-
-
-                if (chaosMode) {
-                    const cells = [...getCells()];
-                    const level = chaosLevels[chaosLevel];
-                    const expected = level.solution;
-                
-                    if (cells.some((cell, i) =>
-                        i === 12
-                            ? (cell.dataset.fillColor || "").split("/").filter(Boolean).length !== 2
-                            : !cell.dataset.fillColor
-                    )) {
-                        resultMessage.textContent =
-                            "Kleur alle vakjes. De koningin moet twee kleuren hebben.";
-                        return;
-                    }
-                
-                    // Bepaal de vier groepen en hun juiste grootte uit de oplossing.
-                    const groups = ["A", "B", "C", "D"];
-                    const groupSizes = {};
-                
-                    groups.forEach(group => {
-                        groupSizes[group] = expected.filter(label =>
-                            label.split("/").includes(group)
-                        ).length;
-                    });
-                
-                    // De twee kleuren van de koningin kunnen worden omgewisseld.
-                    function validateQueenOrder(swapQueenColors) {
-                        const groupColors = {};
-                
-                        for (const group of groups) {
-                            const indices = expected
-                                .map((label, i) =>
-                                    label.split("/").includes(group) ? i : -1
-                                )
-                                .filter(i => i >= 0);
-                
-                            if (indices.length !== groupSizes[group]) {
-                                return false;
-                            }
-                
-                            for (const i of indices) {
-                                const parts = (cells[i].dataset.fillColor || "").split("/");
-                                let color = cells[i].dataset.fillColor;
-                
-                                if (i === 12) {
-                                    // Gebruik de groepslabels van de koningin zelf.
-                                    const queenGroups = expected[12].split("/");
-                                    const queenSlot = queenGroups.indexOf(group);
-                
-                                    if (queenSlot === -1) return false;
-                
-                                    const actualSlot = swapQueenColors
-                                        ? 1 - queenSlot
-                                        : queenSlot;
-                
-                                    color = parts[actualSlot] || "";
-                                }
-                
-                                if (!color) return false;
-                
-                                if (
-                                    groupColors[group] &&
-                                    groupColors[group] !== color
-                                ) {
-                                    return false;
-                                }
-                
-                                groupColors[group] = color;
-                            }
-                        }
-                
-                        // Elke groep moet een eigen kleur hebben.
-                        return new Set(Object.values(groupColors)).size === 4;
-                    }
-                
-                    if (
-                        validateQueenOrder(false) ||
-                        validateQueenOrder(true)
-                    ) {
-                        completePuzzle(true);
-                    } else {
-                        showIncorrect();
-                    }
-                
-                    return;
-                }
+                if (indices.length !== ({A:6,B:6,C:7,D:7})[group]) valid = false;
                 for (const i of indices) {
                     const parts = (cells[i].dataset.fillColor || "").split("/");
                     let color = cells[i].dataset.fillColor;
