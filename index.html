@@ -1730,7 +1730,8 @@ function checkAnswer() {
     if (chaosMode) {
         const cells = [...getCells()];
         const level = chaosLevels[chaosLevel];
-        if (cells.some((cell, i) => i === 12
+        const queenIndex = level.pieces.indexOf("E");
+        if (cells.some((cell, i) => i === queenIndex
             ? (cell.dataset.fillColor || "").split("/").filter(Boolean).length !== 2
             : !cell.dataset.fillColor)) {
             resultMessage.textContent = "Kleur alle vakjes. De koningin moet twee kleuren hebben.";
@@ -1748,7 +1749,7 @@ function checkAnswer() {
                 for (const i of indices) {
                     const parts = (cells[i].dataset.fillColor || "").split("/");
                     let color = cells[i].dataset.fillColor;
-                    if (i === 12) {
+                    if (i === queenIndex) {
                         const queenSlotForGroup = group === "C" ? 0 : 1;
                         const queenSlot = swapQueenColors ? 1 - queenSlotForGroup : queenSlotForGroup;
                         color = parts[queenSlot] || "";
